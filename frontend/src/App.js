@@ -3,6 +3,32 @@ import API from "./api/client";
 import "./styles.css";
 
 export default function App() {
+  const [language, setLanguage] = useState("Python");
+  const [concept, setConcept] = useState("Loops");
+  const [difficulty, setDifficulty] = useState("Easy");
+
+  const [task, setTask] = useState("");
+  const [loading, setLoading] = useState(false);
+
+  const generate = async () => {
+    setLoading(true);
+    setTask("");
+
+    try {
+      const res = await API.post("/generate-task", {
+        language,
+        concept,
+        difficulty
+      });
+
+      setTask(res.data.task);
+    } catch (err) {
+      console.error(err);
+      setTask("Error generating task.");
+    }
+
+    setLoading(false);
+  };
 
   return (
     <div className="container">
