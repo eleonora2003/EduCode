@@ -1,89 +1,74 @@
 import { useState } from "react";
-import API from "./api/client";
 import "./styles.css";
 
+import GenerateTask from "./components/GenerateTask";
+import Template from "./components/Template";
+import Validation from "./components/Validation";
+import Export from "./components/Export";
+import History from "./components/History";
+
 export default function App() {
-  const [language, setLanguage] = useState("Python");
-  const [concept, setConcept] = useState("Loops");
-  const [difficulty, setDifficulty] = useState("Easy");
-
+  const [currentPage, setCurrentPage] = useState("generate");
   const [task, setTask] = useState("");
-  const [loading, setLoading] = useState(false);
-  const [tasks, setTasks] = useState([]);
-
-  const loadTasks = async () => {
-    const res = await API.get("/tasks");
-    setTasks(res.data);
-  };
-
-  const generate = async () => {
-    setLoading(true);
-    setTask("");
-
-    try {
-      const res = await API.post("/task", {
-        language,
-        concept,
-        difficulty
-      });
-
-      setTask(res.data.description);
-    } catch (err) {
-      console.error(err);
-      setTask("Error generating task.");
-    }
-
-    setLoading(false);
-  };
 
   return (
-    <div className="container">
-      <h1>AI Programming Task Generator</h1>
+    <div className="app-layout">
+      {/* Sidebar */}
+      <aside className="sidebar">
+        <div className="logo-section">
+          <img src="/logo.svg" alt="logo" className="logo" />
+          <span className="logo-text">AI Task Generator</span>
+        </div>
 
-      <div className="card">
+        <nav className="nav-menu">
+          <button
+            className={`nav-item ${currentPage === "generate" ? "active" : ""}`}
+            onClick={() => setCurrentPage("generate")}
+          >
+            <span className="nav-icon">▶</span>
+            <span>Generate Task</span>
+          </button>
+          <button
+            className={`nav-item ${currentPage === "templates" ? "active" : ""}`}
+            onClick={() => setCurrentPage("templates")}
+          >
+            <span className="nav-icon">◆</span>
+            <span>Templates</span>
+          </button>
+          <button
+            className={`nav-item ${currentPage === "validation" ? "active" : ""}`}
+            onClick={() => setCurrentPage("validation")}
+          >
+            <span className="nav-icon">✓</span>
+            <span>Validation</span>
+          </button>
+          <button
+            className={`nav-item ${currentPage === "export" ? "active" : ""}`}
+            onClick={() => setCurrentPage("export")}
+          >
+            <span className="nav-icon">↗</span>
+            <span>Export</span>
+          </button>
+          <button
+            className={`nav-item ${currentPage === "history" ? "active" : ""}`}
+            onClick={() => setCurrentPage("history")}
+          >
+            <span className="nav-icon">⏱</span>
+            <span>History</span>
+          </button>
+        </nav>
+      </aside>
 
-        <label>Language</label>
-        <select value={language} onChange={(e) => setLanguage(e.target.value)}>
-          <option>Python</option>
-          <option>Java</option>
-        </select>
-
-        <label>Concept</label>
-        <select value={concept} onChange={(e) => setConcept(e.target.value)}>
-          <option>Loops</option>
-          <option>Arrays</option>
-          <option>OOP</option>
-          <option>Functions</option>
-        </select>
-
-        <label>Difficulty</label>
-        <select value={difficulty} onChange={(e) => setDifficulty(e.target.value)}>
-          <option>Easy</option>
-          <option>Medium</option>
-          <option>Hard</option>
-        </select>
-
-        <button onClick={generate} disabled={loading}>
-          {loading ? "Generating..." : "Generate Task"}
-        </button>
-      </div>
-
-      <div className="result">
-        <h2>Generated Task</h2>
-        <pre>{task}</pre>
-      </div>
-
-      <button onClick={loadTasks}>
-        Show Saved Tasks
-      </button>
-
-      <ul>
-        {tasks.map((t) => (
-          <li key={t.task_id}>
-            {t.title}
-          </li>
-        ))}
-      </ul>
+      {/* Main Content */}
+      <main className="main-content">
+        {currentPage === "generate" && (
+          <GenerateTask task={task} setTask={setTask} />
+        )}
+        {currentPage === "templates" && <Template />}
+        {currentPage === "validation" && <Validation />}
+        {currentPage === "export" && <Export />}
+        {currentPage === "history" && <History />}
+      </main>
     </div>
   );
 }
