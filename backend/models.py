@@ -41,7 +41,7 @@ class Task(Base):
     difficulty = Column(String)
     status = Column(String)
     created_at = Column(DateTime, default=datetime.utcnow)
-    updated_at = Column(DateTime, default=datetime.utcnow)
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
     user_id = Column(Integer, ForeignKey("users.user_id"))
     language_id = Column(Integer, ForeignKey("languages.language_id"))
@@ -57,7 +57,7 @@ class TestCase(Base):
     task_id = Column(Integer, ForeignKey("tasks.task_id"))
 
 
-class Solution:
+class Solution(Base):
     __tablename__ = "solutions"
 
     solution_id = Column(Integer, primary_key=True)

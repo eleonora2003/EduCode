@@ -1,11 +1,11 @@
 from sqlalchemy.orm import Session
-from models import Task
+from models import Task, Template
 
-def create_task(db: Session, title: str, description: str):
+def create_task(db: Session, title: str, description: str, difficulty: str):
     new_task = Task(
         title=title,
         description=description,
-        difficulty="",
+        difficulty=difficulty,
         status="generated"
     )
     db.add(new_task)
@@ -45,3 +45,8 @@ def delete_task(db: Session, task_id: int):
     return task
 
 
+def get_template(db, concept, difficulty):
+    return db.query(Template).filter(
+        Template.concept == concept,
+        Template.difficulty == difficulty
+    ).first()
