@@ -1,15 +1,21 @@
 import { useState } from "react";
+import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
 import "./styles.css";
-
+import { AuthProvider } from "./context/AuthContext";
+import PrivateRoute from "./utils/PrivateRoute";
+import Login from "./components/Auth/Login";
+import Register from "./components/Auth/Register";
 import GenerateTask from "./components/GenerateTask";
 import Template from "./components/Template";
 import Validation from "./components/Validation";
 import Export from "./components/Export";
 import History from "./components/History";
+import { useAuth } from "./context/AuthContext";
 
-export default function App() {
+function MainLayout() {
   const [currentPage, setCurrentPage] = useState("generate");
   const [task, setTask] = useState("");
+  const { logout } = useAuth();
 
   return (
     <div className="app-layout">
@@ -19,7 +25,7 @@ export default function App() {
           <img src="/logo.svg" alt="logo" className="logo" />
           <span className="logo-text">AI Task Generator</span>
         </div>
-
+        
         <nav className="nav-menu">
           <button
             className={`nav-item ${currentPage === "generate" ? "active" : ""}`}
@@ -56,6 +62,10 @@ export default function App() {
             <span className="nav-icon">⏱</span>
             <span>History</span>
           </button>
+          <button className="nav-item" onClick={logout}>
+            <span className="nav-icon">⇦</span>
+            <span>Logout</span>
+          </button>
         </nav>
       </aside>
 
@@ -70,5 +80,29 @@ export default function App() {
         {currentPage === "history" && <History />}
       </main>
     </div>
+  );
+}
+
+export default function App() {
+  return (
+    <AuthProvider>
+      <Router>
+        <Routes>
+          <Route path="/login" element={<Login />} />
+          <Route path="/register" element={<Register />} />
+
+          <Route element={<PrivateRoute />}>
+            <Route path="/" element={<MainLayout />} />
+            <Route path="/generate" element={<MainLayout />} />
+            <Route path="/templates" element={<MainLayout />} />
+            <Route path="/validation" element={<MainLayout />} />
+            <Route path="/export" element={<MainLayout />} />
+            <Route path="/history" element={<MainLayout />} />
+          </Route>
+
+          <Route path="*" element={<Navigate to="/login" />} />
+        </Routes>
+      </Router>
+    </AuthProvider>
   );
 }

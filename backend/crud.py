@@ -1,18 +1,18 @@
 from sqlalchemy.orm import Session
 from models import Task, Template
 
-def create_task(db: Session, title: str, description: str, difficulty: str):
+def create_task(db: Session, title: str, description: str, difficulty: str, user_id: int):
     new_task = Task(
         title=title,
         description=description,
         difficulty=difficulty,
-        status="generated"
+        status="generated",
+        user_id=user_id
     )
     db.add(new_task)
     db.commit()
     db.refresh(new_task)
     return new_task
-
 
 def get_task(db: Session, task_id: int):
     return db.query(Task).filter(Task.task_id == task_id).first()
@@ -50,3 +50,6 @@ def get_template(db, concept, difficulty):
         Template.concept == concept,
         Template.difficulty == difficulty
     ).first()
+
+def get_tasks_by_user(db: Session, user_id: int):
+    return db.query(Task).filter(Task.user_id == user_id).all()

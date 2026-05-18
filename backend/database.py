@@ -30,8 +30,19 @@ def init_db():
         autocommit=False
     )
 
+    import models
+    Base.metadata.create_all(bind=engine)
+
 
 def get_session_local():
     if SessionLocal is None:
         raise Exception("DB not initialized")
     return SessionLocal
+
+def get_db():
+    SessionLocalLocal = get_session_local()
+    db = SessionLocalLocal()
+    try:
+        yield db
+    finally:
+        db.close()
