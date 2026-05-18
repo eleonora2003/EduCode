@@ -35,6 +35,7 @@ jobs:
         env:
           OPENAI_API_KEY: dummy_key
           DATABASE_URL: sqlite:///./test.db
+          SECRET_KEY: dummy_secret_key
         run: python -c "from main import app; print('Backend OK')"
 
   frontend:
