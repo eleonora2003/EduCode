@@ -4,9 +4,9 @@ from contextlib import asynccontextmanager
 
 from .config import settings
 from .database import engine, Base, init_db
-from .routers import auth
+from .routers import auth, tasks
 
-from .models import User
+from .models import User, Task
 
 
 @asynccontextmanager
@@ -19,7 +19,6 @@ async def lifespan(app: FastAPI):
     yield
 
     print("Shutting down EduCode application...")
-
 
 
 app = FastAPI(
@@ -55,7 +54,7 @@ def health_check():
 
 
 app.include_router(auth.router)
-
+app.include_router(tasks.router)
 
 
 if __name__ == "__main__":

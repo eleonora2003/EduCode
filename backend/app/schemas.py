@@ -46,3 +46,79 @@ class Token(BaseModel):
 
 class TokenData(BaseModel):
     email: Optional[str] = None
+
+
+# ============ Task Schemas ============
+
+class TaskBase(BaseModel):
+    title: str
+    description: str
+    language: str
+    concept: str
+    difficulty: str
+    template_name: Optional[str] = None
+    examples: Optional[str] = None
+    solution: Optional[str] = None
+    tests: Optional[str] = None
+
+    @field_validator('language')
+    @classmethod
+    def validate_language(cls, v):
+        allowed_languages = ['Python', 'Java']
+        if v not in allowed_languages:
+            raise ValueError(f'Language must be one of: {", ".join(allowed_languages)}. The system currently supports only Python and Java.')
+        return v
+
+    @field_validator('difficulty')
+    @classmethod
+    def validate_difficulty(cls, v):
+        allowed_difficulties = ['Basic', 'Intermediate', 'Advanced']
+        if v not in allowed_difficulties:
+            raise ValueError(f'Difficulty must be one of: {", ".join(allowed_difficulties)}')
+        return v
+
+
+class TaskCreate(TaskBase):
+    pass
+
+
+class TaskUpdate(BaseModel):
+    title: Optional[str] = None
+    description: Optional[str] = None
+    solution: Optional[str] = None
+    tests: Optional[str] = None
+
+
+class TaskResponse(TaskBase):
+    id: int
+    user_id: int
+    is_validated: bool
+    validation_result: Optional[dict] = None
+    created_at: datetime
+    updated_at: Optional[datetime] = None
+
+    class Config:
+        from_attributes = True
+
+
+class TaskGenerateRequest(BaseModel):
+    language: str
+    concept: str
+    difficulty: str
+    template: str = "Default Template"
+
+    @field_validator('language')
+    @classmethod
+    def validate_language(cls, v):
+        allowed_languages = ['Python', 'Java']
+        if v not in allowed_languages:
+            raise ValueError(f'Language must be one of: {", ".join(allowed_languages)}. The system currently supports only Python and Java.')
+        return v
+
+
+class TaskGenerateResponse(BaseModel):
+    title: str
+    description: str
+    examples: Optional[str] = None
+    solution: Optional[str] = None
+    tests: Optional[str] = None

@@ -9,10 +9,13 @@ body {
   background: #f3f4f6;
   color: #333;
 }
+
 .app-layout {
   display: flex;
   min-height: 100vh;
 }
+
+/* APP.JS - Sidebar Navigation */
 .sidebar {
   width: 176px;
   background: #2a2a2a;
@@ -85,6 +88,8 @@ body {
   text-align: center;
   flex-shrink: 0;
 }
+
+/*APP.JS - Main Content Area */
 .main-content {
   flex: 1;
   overflow-y: auto;
@@ -114,6 +119,8 @@ body {
   font-size: 14px;
   color: #6b7280;
 }
+
+/* SHARED - Form Card (Used by GenerateTask, Export, History) */
 .form-card {
   background: white;
   padding: 24px;
@@ -176,6 +183,8 @@ textarea {
   resize: vertical;
   min-height: 100px;
 }
+
+/* SHARED - Buttons (Used by all components) */
 .btn-primary {
   width: 100%;
   padding: 12px 16px;
@@ -253,6 +262,8 @@ textarea {
 .link-view:hover {
   text-decoration: underline;
 }
+
+/* SHARED - Result Card (Used by GenerateTask, History) */
 .result-card {
   background: white;
   padding: 24px;
@@ -268,6 +279,8 @@ textarea {
   padding-bottom: 16px;
   border-bottom: 1px solid #e5e7eb;
 }
+
+/* SHARED - Tabs (Used by GenerateTask, History) */
 .tabs {
   display: flex;
   gap: 0;
@@ -337,6 +350,7 @@ pre {
   font-family: 'Courier New', monospace;
 }
 
+/* TEMPLATE.JS - Templates Page */
 .tags {
   display: flex;
   flex-wrap: wrap;
@@ -401,6 +415,8 @@ pre {
   font-size: 13px;
   color: #6b7280;
 }
+
+/* VALIDATION.JS - Validation Dashboard */
 .stats-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
@@ -429,6 +445,7 @@ pre {
   color: #1f2937;
 }
 
+/* SHARED - Table (Used by History, Validation, Export) */
 .table-card {
   background: white;
   padding: 24px;
@@ -472,6 +489,7 @@ pre {
   background: #f9fafb;
 }
 
+/* SHARED - Badges (Used by History, Validation, Export, GenerateTask) */
 .badge {
   display: inline-block;
   padding: 4px 10px;
@@ -509,6 +527,8 @@ pre {
   background: #fef3c7;
   color: #92400e;
 }
+
+/* VALIDATION.JS - Logs Section */
 .logs-card {
   background: white;
   padding: 24px;
@@ -532,6 +552,8 @@ pre {
   overflow-y: auto;
   font-size: 12px;
 }
+
+/* SHARED - Placeholder Card (Used by History, Validation, Export) */
 .placeholder-card {
   background: white;
   padding: 60px 24px;
@@ -551,6 +573,7 @@ pre {
   font-size: 15px;
 }
 
+/* CUSTOM SCROLLBAR */
 ::-webkit-scrollbar {
   width: 8px;
   height: 8px;
@@ -569,6 +592,7 @@ pre {
   background: #9ca3af;
 }
 
+/* GENERATETASK.JS - Generate Task Specific Styles */
 .form-subtitle {
   color: #6b7280;
   font-size: 14px;
@@ -743,6 +767,7 @@ pre {
   flex-wrap: wrap;
 }
 
+/* Loading Overlay (GenerateTask) */
 .loading-overlay {
   position: fixed;
   top: 0;
