@@ -1,36 +1,111 @@
-# AI Programming Task Generator
+# EduCode – AI-Powered Programming Task Generator
 
-AI-powered web application for generating programming exercises for teachers and programming courses.
+EduCode is an AI-powered web application designed for teachers, educators, and programming courses.
 
-The application allows teachers to automatically generate:
+The platform helps generate complete programming exercises using artificial intelligence, including:
 - programming tasks
-- test cases
 - reference solutions
+- unit tests
+- validation workflows
+- reusable custom templates
 
-based on selected parameters such as:
-- programming language
-- programming concept
-- difficulty level
+Teachers can quickly create high-quality exercises tailored to different:
+- programming languages
+- concepts/topics
+- difficulty levels
+- custom teaching templates
 
 ---
 
 # Features
 
-## Current Features
-- Generate programming tasks using OpenAI API
-- Select:
-  - Programming language
-  - Concept/topic
-  - Difficulty
-- FastAPI backend
-- React frontend
+## AI Task Generation
+- Generate programming exercises using OpenAI
+- AI-generated:
+  - task descriptions
+  - reference solutions
+  - unit tests
+- Supports custom template-based generation
 
-## Planned Features
-- Test case generation
-- Reference solution generation
-- Docker sandbox execution
-- Automatic validation
-- Export to PDF / Markdown 
+---
+
+## Custom Template System
+- Create reusable teaching templates
+- Define:
+  - programming language
+  - concepts
+  - difficulty
+  - learning goals
+  - restrictions
+  - starter code
+- View and delete saved templates
+- Generate tasks directly from saved templates
+
+---
+
+## Task Management & History
+- Save generated tasks
+- View task history
+- Store:
+  - generated descriptions
+  - tests
+  - solutions
+  - template metadata
+
+---
+
+## Validation System
+- Validate generated solutions
+- Docker-based execution environment
+- Automated test execution
+- Validation statistics and logs
+
+---
+
+## Export Features
+Export tasks to:
+- PDF
+- Markdown
+- Moodle XML
+
+---
+
+## Authentication System
+- User registration and login
+- JWT authentication
+- Protected routes
+- User-specific templates and task history
+
+---
+
+## AI Chat Assistant
+- AI-assisted programming support
+- Educational workflow assistance
+- Interactive task generation support
+
+---
+
+# Technology Stack
+
+## Frontend
+- React
+- React Router
+- Axios
+
+## Backend
+- FastAPI
+- SQLAlchemy
+- JWT Authentication
+
+## Database
+- SQLite
+
+## AI Integration
+- OpenAI API
+
+## DevOps
+- Docker
+- Docker Compose
 
 ---
 
@@ -48,25 +123,40 @@ pip install -r requirements.txt
 fastapi
 uvicorn
 openai
+sqlalchemy
 python-dotenv
+python-jose
+passlib
+bcrypt
+pydantic
 ```
 
-## Environment Variables
+---
+
+# Environment Variables
 
 Create `.env` file inside backend folder:
 
 ```env
 OPENAI_API_KEY=your_api_key
+SECRET_KEY=your_secret_key
+ALGORITHM=HS256
+ACCESS_TOKEN_EXPIRE_MINUTES=30
 ```
+
 ---
 
 # Running with Docker Compose
 
-You can run both frontend and backend using Docker Compose.
+Run frontend and backend together:
+
+```bash
+docker compose up --build
+```
 
 ---
 
-# Docker Setup
+# Docker Commands
 
 ## Start application
 
@@ -78,4 +168,10 @@ docker compose up --build
 
 ```bash
 docker compose down
+```
+
+## Rebuild backend only
+
+```bash
+docker compose build --no-cache backend
 ```
