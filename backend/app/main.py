@@ -4,7 +4,7 @@ from contextlib import asynccontextmanager
 
 from .config import settings
 from .database import engine, Base, init_db
-from .routers import auth, tasks
+from .routers import auth, tasks, export
 
 from .models import User, Task
 
@@ -36,7 +36,6 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-
 @app.get("/")
 def root():
     """Health check endpoint."""
@@ -55,6 +54,7 @@ def health_check():
 
 app.include_router(auth.router)
 app.include_router(tasks.router)
+app.include_router(export.router)
 
 
 if __name__ == "__main__":

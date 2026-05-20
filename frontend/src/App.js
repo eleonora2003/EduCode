@@ -1,7 +1,7 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
 import "./styles.css";
-import { AuthProvider } from "./context/AuthContext";
+import { AuthProvider, useAuth } from "./context/AuthContext";
 import PrivateRoute from "./utils/PrivateRoute";
 import Login from "./components/Auth/Login";
 import Register from "./components/Auth/Register";
@@ -10,60 +10,96 @@ import Template from "./components/Template";
 import Validation from "./components/Validation";
 import Export from "./components/Export";
 import History from "./components/History";
-import { useAuth } from "./context/AuthContext";
 
 function MainLayout() {
   const [currentPage, setCurrentPage] = useState("generate");
   const [task, setTask] = useState("");
-  const { logout } = useAuth();
+  const { user, logout } = useAuth();
+
+  useEffect(() => {
+    const path = window.location.pathname;
+    const pageMap = {
+      "/": "generate",
+      "/generate": "generate",
+      "/templates": "templates",
+      "/validation": "validation",
+      "/export": "export",
+      "/history": "history"
+    };
+    if (pageMap[path]) {
+      setCurrentPage(pageMap[path]);
+    }
+  }, []);
+
+  const handleNavigate = (page) => {
+    setCurrentPage(page);
+    window.history.pushState(null, "", `/${page === "generate" ? "" : page}`);
+  };
+
+  if (!user) {
+    return null;
+  }
 
   return (
-    <div className="app-layout">
+<div className="app-layout">
       {/* Sidebar */}
       <aside className="sidebar">
         <div className="logo-section">
-          <img src="/logo.svg" alt="logo" className="logo" />
-          <span className="logo-text">AI Task Generator</span>
+          <div className="robot-icon" aria-label="robot logo">🤖</div>
+          <span className="logo-text">EduCode</span>
+        </div>
+
+        {/* User Info */}
+        <div className="user-section">
+          <div className="user-avatar">
+            {user.email ? user.email.charAt(0).toUpperCase() : "U"}
+          </div>
+          <div className="user-info">
+            <span className="user-name">
+              {user.name || user.full_name || (user.email ? user.email.split('@')[0] : "User")}
+            </span>
+            <span className="user-email">{user.email || ""}</span>
+          </div>
         </div>
         
         <nav className="nav-menu">
           <button
             className={`nav-item ${currentPage === "generate" ? "active" : ""}`}
-            onClick={() => setCurrentPage("generate")}
+            onClick={() => handleNavigate("generate")}
           >
-            <span className="nav-icon">▶</span>
+            <span className="nav-icon">📝</span>
             <span>Generate Task</span>
           </button>
           <button
             className={`nav-item ${currentPage === "templates" ? "active" : ""}`}
-            onClick={() => setCurrentPage("templates")}
+            onClick={() => handleNavigate("templates")}
           >
-            <span className="nav-icon">◆</span>
+            <span className="nav-icon">📋</span>
             <span>Templates</span>
           </button>
           <button
             className={`nav-item ${currentPage === "validation" ? "active" : ""}`}
-            onClick={() => setCurrentPage("validation")}
+            onClick={() => handleNavigate("validation")}
           >
-            <span className="nav-icon">✓</span>
+            <span className="nav-icon">✅</span>
             <span>Validation</span>
           </button>
           <button
             className={`nav-item ${currentPage === "export" ? "active" : ""}`}
-            onClick={() => setCurrentPage("export")}
+            onClick={() => handleNavigate("export")}
           >
-            <span className="nav-icon">↗</span>
+           <span className="nav-icon">📤</span>
             <span>Export</span>
           </button>
           <button
             className={`nav-item ${currentPage === "history" ? "active" : ""}`}
-            onClick={() => setCurrentPage("history")}
+            onClick={() => handleNavigate("history")}
           >
-            <span className="nav-icon">⏱</span>
+            <span className="nav-icon">🕐</span>
             <span>History</span>
           </button>
-          <button className="nav-item" onClick={logout}>
-            <span className="nav-icon">⇦</span>
+          <button className="nav-item logout-btn" onClick={logout}>
+            <span className="nav-icon">🚪</span>
             <span>Logout</span>
           </button>
         </nav>
@@ -83,7 +119,7 @@ function MainLayout() {
   );
 }
 
-export default function App() {
+function App() {
   return (
     <AuthProvider>
       <Router>
@@ -100,9 +136,11 @@ export default function App() {
             <Route path="/history" element={<MainLayout />} />
           </Route>
 
-          <Route path="*" element={<Navigate to="/login" />} />
+          <Route path="*" element={<Navigate to="/" />} />
         </Routes>
       </Router>
     </AuthProvider>
   );
 }
+
+export default App;

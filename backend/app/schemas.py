@@ -122,3 +122,59 @@ class TaskGenerateResponse(BaseModel):
     examples: Optional[str] = None
     solution: Optional[str] = None
     tests: Optional[str] = None
+
+
+# ============ Template Schemas ============
+
+class TemplateBase(BaseModel):
+    name: str
+    description: Optional[str] = None
+    language: str
+    learning_goals: Optional[list] = None
+    restrictions: Optional[list] = None
+    code_structure: Optional[str] = None
+
+
+class TemplateCreate(TemplateBase):
+    pass
+
+
+class TemplateResponse(TemplateBase):
+    id: int
+    user_id: int
+    is_default: bool
+    created_at: datetime
+    updated_at: Optional[datetime] = None
+
+    class Config:
+        from_attributes = True
+
+# ============ Export Schemas ============
+
+class ExportRequest(BaseModel):
+    task_ids: List[int]
+    format: str  # pdf, markdown, moodle_xml
+
+    @field_validator('format')
+    @classmethod
+    def validate_format(cls, v):
+        allowed_formats = ['pdf', 'markdown', 'moodle_xml']
+        if v not in allowed_formats:
+            raise ValueError(f'Format must be one of: {", ".join(allowed_formats)}')
+        return v
+
+
+# ============ Statistics Schemas ============
+
+class TaskStatistics(BaseModel):
+    total_tasks: int
+    validated_tasks: int
+    failed_tasks: int
+    pending_tasks: int
+
+
+class ValidationStatistics(BaseModel):
+    total_validations: int
+    passed: int
+    failed: int
+    average_execution_time: float

@@ -29,8 +29,8 @@ body {
 .logo-section {
   display: flex;
   align-items: center;
-  gap: 8px;
-  padding: 16px;
+  gap: 12px;
+  padding: 18px 16px;
   border-bottom: 1px solid #404040;
 }
 
@@ -40,13 +40,75 @@ body {
   flex-shrink: 0;
 }
 
+.robot-icon {
+  width: 44px;
+  height: 44px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 28px;
+}
+
 .logo-text {
-  font-size: 13px;
-  font-weight: 600;
+  display: block;
+  font-size: 14px;
+  font-weight: 700;
   white-space: nowrap;
   overflow: hidden;
 }
 
+.user-section {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 18px 16px;
+  border-bottom: 1px solid #404040;
+}
+
+.user-avatar {
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  background: #374151;
+  color: white;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+}
+
+.user-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.user-name,
+.user-email {
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.user-name {
+  font-size: 14px;
+  font-weight: 700;
+  color: #f3f4f6;
+}
+
+.user-email {
+  font-size: 12px;
+  color: #9ca3af;
+}
+
+.logo-caption {
+  display: block;
+  margin-top: 2px;
+  color: #fbbf24;
+  font-size: 16px;
+}
 .nav-menu {
   display: flex;
   flex-direction: column;
