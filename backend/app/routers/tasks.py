@@ -3,9 +3,9 @@ from typing import List, Optional
 from sqlalchemy.orm import Session
 
 from ..database import get_db
-from ..models import User
+from ..models import User, Template
 from ..schemas import (
-    TaskCreate, TaskResponse, TaskUpdate, 
+    TaskCreate, TaskResponse, TaskUpdate,
     TaskGenerateRequest, TaskGenerateResponse,
     TaskStatistics
 )
@@ -19,27 +19,39 @@ router = APIRouter(prefix="/api/tasks", tags=["Tasks"])
 @router.post("/generate", response_model=TaskGenerateResponse)
 def generate_task(
     request: TaskGenerateRequest,
-    current_user: User = Depends(get_current_user)
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
 ):
-    """
-    Generate a new programming task using AI.
-    
-    - **language**: Programming language (Python or Java)
-    - **concept**: Programming concept to focus on
-    - **difficulty**: Difficulty level (Basic, Intermediate, Advanced)
-    - **template**: Template style (optional)
-    
-    This endpoint uses OpenAI to generate a complete task with description,
-    solution, and tests. The task is NOT automatically saved - use the
-    POST /api/tasks endpoint to save it.
-    """
+    selected_template = None
+
+    template_name = getattr(request, "template", None) or "Default Template"
+
+    if request.template_id:
+        selected_template = db.query(Template).filter(
+            Template.template_id == request.template_id,
+            Template.user_id == current_user.id
+        ).first()
+
+        if not selected_template:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Template not found"
+            )
+
+        template_name = f"""
+{selected_template.name}
+
+Use this custom template:
+{selected_template.description}
+"""
+
     result = generation_service.generate_task(
         language=request.language,
         concept=request.concept,
         difficulty=request.difficulty,
-        template_name=request.template
+        template_name=template_name
     )
-    
+
     return TaskGenerateResponse(**result)
 
 
@@ -49,11 +61,6 @@ def create_task(
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
-    """
-    Create and save a new task.
-    
-    The task will be associated with the currently authenticated user.
-    """
     return TaskService.create_task(db=db, task=task, user_id=current_user.id)
 
 
@@ -67,14 +74,6 @@ def get_tasks(
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
-    """
-    Get all tasks for the current user.
-    
-    Optional filters:
-    - **language**: Filter by programming language
-    - **concept**: Filter by programming concept
-    - **difficulty**: Filter by difficulty level
-    """
     return TaskService.get_tasks(
         db=db,
         user_id=current_user.id,
@@ -91,9 +90,6 @@ def get_task_statistics(
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
-    """
-    Get statistics about the current user's tasks.
-    """
     return TaskService.get_task_statistics(user_id=current_user.id, db=db)
 
 
@@ -103,17 +99,14 @@ def get_task(
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
-    """
-    Get a specific task by ID.
-    
-    Only returns tasks owned by the current user.
-    """
     task = TaskService.get_task(db=db, task_id=task_id, user_id=current_user.id)
+
     if not task:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Task not found"
         )
+
     return task
 
 
@@ -124,22 +117,19 @@ def update_task(
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
-    """
-    Update an existing task.
-    
-    Only allows updating tasks owned by the current user.
-    """
     updated_task = TaskService.update_task(
         db=db,
         task_id=task_id,
         user_id=current_user.id,
         task_update=task_update
     )
+
     if not updated_task:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Task not found"
         )
+
     return updated_task
 
 
@@ -149,18 +139,16 @@ def delete_task(
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
-    """
-    Delete a task.
-    
-    Only allows deleting tasks owned by the current user.
-    """
     success = TaskService.delete_task(
         db=db,
         task_id=task_id,
         user_id=current_user.id
     )
+
     if not success:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Task not found"
         )
+
+    return None

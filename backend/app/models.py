@@ -26,6 +26,23 @@ class User(Base):
     updated_at = Column(DateTime(timezone=True), onupdate=func.now(), nullable=True)
 
     tasks = relationship("Task", back_populates="owner", cascade="all, delete-orphan")
+    templates = relationship("Template", back_populates="owner", cascade="all, delete-orphan")
+
+
+class Template(Base):
+    """Custom template model - stores user-created task templates."""
+    __tablename__ = "templates"
+
+    template_id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
+    name = Column(String(255), nullable=False)
+    description = Column(Text, nullable=True)
+    difficulty = Column(String(20), nullable=False)
+    concept = Column(String(100), nullable=False)
+    created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
+    updated_at = Column(DateTime(timezone=True), onupdate=func.now(), nullable=True)
+
+    owner = relationship("User", back_populates="templates")
 
 
 class Task(Base):

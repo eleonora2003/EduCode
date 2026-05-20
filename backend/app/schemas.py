@@ -106,6 +106,7 @@ class TaskGenerateRequest(BaseModel):
     concept: str
     difficulty: str
     template: str = "Default Template"
+    template_id: Optional[int] = None
 
     @field_validator('language')
     @classmethod
@@ -129,10 +130,8 @@ class TaskGenerateResponse(BaseModel):
 class TemplateBase(BaseModel):
     name: str
     description: Optional[str] = None
-    language: str
-    learning_goals: Optional[list] = None
-    restrictions: Optional[list] = None
-    code_structure: Optional[str] = None
+    difficulty: str
+    concept: str
 
 
 class TemplateCreate(TemplateBase):
@@ -140,9 +139,8 @@ class TemplateCreate(TemplateBase):
 
 
 class TemplateResponse(TemplateBase):
-    id: int
+    template_id: int
     user_id: int
-    is_default: bool
     created_at: datetime
     updated_at: Optional[datetime] = None
 

@@ -4,9 +4,9 @@ from contextlib import asynccontextmanager
 
 from .config import settings
 from .database import engine, Base, init_db
-from .routers import auth, tasks, export
+from .routers import auth, tasks, export, templates
 
-from .models import User, Task
+from .models import User, Task, Template
 
 
 @asynccontextmanager
@@ -55,6 +55,7 @@ def health_check():
 app.include_router(auth.router)
 app.include_router(tasks.router)
 app.include_router(export.router)
+app.include_router(templates.router)
 
 
 if __name__ == "__main__":

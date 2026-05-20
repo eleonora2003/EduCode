@@ -1,4 +1,137 @@
+import { useEffect, useState } from "react";
+import API from "../api/client";
+
 export default function Template() {
+  const [step, setStep] = useState(0);
+  const [templates, setTemplates] = useState([]);
+  const [selectedTemplate, setSelectedTemplate] = useState(null);
+
+  const [templateName, setTemplateName] = useState("");
+  const [language, setLanguage] = useState("Python");
+  const [concept, setConcept] = useState("Loops");
+  const [difficulty, setDifficulty] = useState("Basic");
+  const [learningGoals, setLearningGoals] = useState("");
+  const [restrictions, setRestrictions] = useState("");
+  const [codeTemplate, setCodeTemplate] = useState(
+    `def solution(input_data):\n    \"\"\"\n    TODO: Implement your solution here\n    \"\"\"\n    pass`
+  );
+
+  const [isSaving, setIsSaving] = useState(false);
+  const [saveMessage, setSaveMessage] = useState("");
+  const [stepError, setStepError] = useState("");
+
+  const steps = [
+    "Basic Information",
+    "Learning Goals",
+    "Restrictions",
+    "Code Template",
+    "Review & Save",
+  ];
+
+  const isStepComplete = (stepIndex) => {
+    switch (stepIndex) {
+      case 0:
+        return templateName.trim().length > 0;
+      case 1:
+        return learningGoals.trim().length > 0;
+      case 2:
+        return restrictions.trim().length > 0;
+      case 3:
+        return codeTemplate.trim().length > 0;
+      default:
+        return true;
+    }
+  };
+
+  const next = () => {
+    if (!isStepComplete(step)) {
+      setStepError("Please complete this step before moving forward.");
+      return;
+    }
+
+    setStep((s) => Math.min(s + 1, steps.length - 1));
+    setStepError("");
+  };
+
+  const prev = () => {
+    setStep((s) => Math.max(s - 1, 0));
+    setStepError("");
+  };
+
+  const loadTemplates = async () => {
+    try {
+      const res = await API.get("/api/templates");
+      setTemplates(res.data || []);
+    } catch (err) {
+      console.error("Failed to load templates", err);
+    }
+  };
+
+  useEffect(() => {
+    loadTemplates();
+  }, []);
+
+
+  const deleteTemplate = async (templateId) => {
+  if (!window.confirm("Delete this template?")) return;
+
+  try {
+    await API.delete(`/api/templates/${templateId}`);
+    setSelectedTemplate(null);
+    await loadTemplates();
+  } catch (err) {
+    console.error("Failed to delete template", err);
+    alert("Failed to delete template.");
+  }
+};
+
+  const handleSaveTemplate = async () => {
+    if (!templateName.trim()) {
+      setSaveMessage("Please enter a template name before saving.");
+      return;
+    }
+
+    const description = `Language: ${language}
+Concept: ${concept}
+Difficulty: ${difficulty}
+
+Learning Goals:
+${learningGoals || "None"}
+
+Restrictions:
+${restrictions || "None"}
+
+Code Template:
+${codeTemplate}`;
+
+    setIsSaving(true);
+    setSaveMessage("");
+
+    try {
+      await API.post("/api/templates", {
+        name: templateName,
+        description,
+        difficulty,
+        concept,
+      });
+
+      setSaveMessage("Template saved successfully.");
+      setTemplateName("");
+      setLearningGoals("");
+      setRestrictions("");
+      setCodeTemplate(
+        `def solution(input_data):\n    \"\"\"\n    TODO: Implement your solution here\n    \"\"\"\n    pass`
+      );
+      setStep(0);
+      await loadTemplates();
+    } catch (err) {
+      console.error(err);
+      setSaveMessage("Failed to save template.");
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
   return (
     <div className="page-content">
       <div className="page-header">
@@ -6,74 +139,246 @@ export default function Template() {
           <h2>Template Editor</h2>
           <p>Create and customize task templates</p>
         </div>
-        <button className="btn-primary">💾 Save Template</button>
+      </div>
+
+      <div className="progress-steps" role="tablist" aria-label="Template steps">
+        {steps.map((label, i) => (
+          <div key={label} className={`step ${i <= step ? "active" : ""}`}>
+            <div className="step-circle">{i < step ? "✓" : i + 1}</div>
+            <div className="step-label">{label}</div>
+          </div>
+        ))}
       </div>
 
       <div className="form-card">
-        <div className="form-group">
-          <label>Template Name</label>
-          <input
-            type="text"
-            placeholder="e.g. Advanced Algorithm Challenge"
-          />
-        </div>
+        <div className="carousel-container" style={{ position: "relative" }}>
+          <button className="carousel-arrow left" onClick={prev} aria-label="previous">
+            ‹
+          </button>
 
-        <div className="form-group">
-          <label>Programming Language</label>
-          <select>
-            <option>Python</option>
-            <option>Java</option>
-            <option>JavaScript</option>
-          </select>
-        </div>
+          <div style={{ padding: 8 }}>
+            {step === 0 && (
+              <div>
+                <h3>Basic Information</h3>
+                <p className="form-subtitle">Set up template name and programming language</p>
 
-        <div className="form-group">
-          <label>Learning Goals</label>
-          <textarea placeholder="Define the learning objectives for this template..."></textarea>
-          <div className="tags">
-            <span className="tag">Understanding loops</span>
-            <span className="tag">Algorithm optimization</span>
-            <span className="tag-add">+ Add goal</span>
+                <div className="form-group">
+                  <label>Template Name</label>
+                  <input
+                    value={templateName}
+                    onChange={(e) => setTemplateName(e.target.value)}
+                    type="text"
+                    placeholder="e.g., Advanced Algorithm Challenge"
+                  />
+                </div>
+
+                <div className="form-group">
+                  <label>Programming Language</label>
+                  <select value={language} onChange={(e) => setLanguage(e.target.value)}>
+                    <option>Python</option>
+                    <option>Java</option>
+                  </select>
+                </div>
+
+                <div className="form-group">
+                  <label>Concept</label>
+                  <select value={concept} onChange={(e) => setConcept(e.target.value)}>
+                    <option>Loops</option>
+                    <option>Functions</option>
+                    <option>Arrays</option>
+                    <option>OOP</option>
+                    <option>Recursion</option>
+                    <option>Sorting</option>
+                    <option>String Manipulation</option>
+                    <option>Data Structures</option>
+                    <option>File I/O</option>
+                    <option>Error Handling</option>
+                  </select>
+                </div>
+
+                <div className="form-group">
+                  <label>Difficulty</label>
+                  <select value={difficulty} onChange={(e) => setDifficulty(e.target.value)}>
+                    <option>Basic</option>
+                    <option>Intermediate</option>
+                    <option>Advanced</option>
+                  </select>
+                </div>
+              </div>
+            )}
+
+            {step === 1 && (
+              <div>
+                <h3>Learning Goals</h3>
+                <p className="form-subtitle">Define what students should learn</p>
+
+                <div className="form-group">
+                  <label>Learning Goals</label>
+                  <textarea
+                    value={learningGoals}
+                    onChange={(e) => setLearningGoals(e.target.value)}
+                    placeholder="Define the learning objectives for this template..."
+                  />
+                </div>
+              </div>
+            )}
+
+            {step === 2 && (
+              <div>
+                <h3>Restrictions</h3>
+                <p className="form-subtitle">Add constraints and limitations</p>
+
+                <div className="form-group">
+                  <label>Restrictions</label>
+                  <textarea
+                    value={restrictions}
+                    onChange={(e) => setRestrictions(e.target.value)}
+                    placeholder="Specify any constraints or limitations..."
+                  />
+                </div>
+              </div>
+            )}
+
+            {step === 3 && (
+              <div>
+                <h3>Code Template</h3>
+                <p className="form-subtitle">Define the starter code structure</p>
+
+                <div className="form-group">
+                  <label>Code Structure Template</label>
+                  <textarea
+                    value={codeTemplate}
+                    onChange={(e) => setCodeTemplate(e.target.value)}
+                    style={{ minHeight: 180, fontFamily: "Courier New, monospace" }}
+                  />
+                </div>
+              </div>
+            )}
+
+            {step === 4 && (
+              <div>
+                <h3>Review & Save</h3>
+                <p className="form-subtitle">Review your template before saving</p>
+
+                <div style={{ background: "#fff8e6", padding: 18, borderRadius: 8 }}>
+                  <p>
+                    <strong>Template Name</strong>
+                    <br />
+                    {templateName || "Not set"}
+                  </p>
+                  <p>
+                    <strong>Language</strong>
+                    <br />
+                    {language}
+                  </p>
+                  <p>
+                    <strong>Concept</strong>
+                    <br />
+                    {concept}
+                  </p>
+                  <p>
+                    <strong>Difficulty</strong>
+                    <br />
+                    {difficulty}
+                  </p>
+                  <p>
+                    <strong>Learning Goals</strong>
+                    <br />
+                    {learningGoals || "Not set"}
+                  </p>
+                  <p>
+                    <strong>Restrictions</strong>
+                    <br />
+                    {restrictions || "Not set"}
+                  </p>
+                </div>
+              </div>
+            )}
           </div>
+
+          <button
+            className="carousel-arrow right"
+            onClick={next}
+            aria-label="next"
+            disabled={step >= steps.length - 1 || !isStepComplete(step)}
+          >
+            ›
+          </button>
         </div>
 
-        <div className="form-group">
-          <label>Restrictions</label>
-          <textarea placeholder="Specify any constraints or limitations..."></textarea>
-          <div className="tags">
-            <span className="tag">No built-in functions</span>
-            <span className="tag">O(n) time complexity</span>
-            <span className="tag-add">+ Add restriction</span>
+        {stepError && (
+          <p style={{ marginTop: 12, color: "#b91c1c", textAlign: "center" }}>
+            {stepError}
+          </p>
+        )}
+
+        {step === steps.length - 1 && (
+          <div style={{ marginTop: 18, textAlign: "center" }}>
+            <button
+              className="btn-primary btn-small"
+              onClick={handleSaveTemplate}
+              disabled={isSaving}
+            >
+              {isSaving ? "Saving..." : "💾 Save Template"}
+            </button>
+
+            {saveMessage && (
+              <p style={{ marginTop: 12, color: "#374151" }}>{saveMessage}</p>
+            )}
           </div>
-        </div>
-
-        <div className="form-group">
-          <label>Code Structure Template</label>
-          <pre>def solution(input_data):
-    """
-    TODO: Implement your solution here
-    """
-    pass</pre>
-        </div>
+        )}
       </div>
 
       <div className="templates-list">
-        <h3>Existing Templates</h3>
-        <div className="template-item">
-          <div>
-            <h4>Default Template</h4>
-            <p>Python • 24 tasks generated</p>
-          </div>
-          <button className="btn-edit">Edit</button>
+  <h3>Existing Templates</h3>
+
+  {templates.length === 0 ? (
+    <p className="no-content">No templates saved yet.</p>
+  ) : (
+    templates.map((template) => (
+      <div key={template.template_id} className="template-item">
+        <div>
+          <h4>{template.name}</h4>
+
+          {selectedTemplate?.template_id === template.template_id && (
+            <div style={{ marginTop: 10 }}>
+              <p><strong>Concept:</strong> {template.concept}</p>
+              <p><strong>Difficulty:</strong> {template.difficulty}</p>
+              <pre style={{ whiteSpace: "pre-wrap", fontFamily: "inherit" }}>
+                {template.description}
+              </pre>
+            </div>
+          )}
         </div>
-        <div className="template-item">
-          <div>
-            <h4>Algorithm Challenge</h4>
-            <p>Python • 18 tasks generated</p>
-          </div>
-          <button className="btn-edit">Edit</button>
+
+        <div style={{ display: "flex", gap: 8 }}>
+          <button
+            className="btn-edit"
+            type="button"
+            onClick={() =>
+              setSelectedTemplate(
+                selectedTemplate?.template_id === template.template_id
+                  ? null
+                  : template
+              )
+            }
+          >
+            {selectedTemplate?.template_id === template.template_id ? "Hide" : "View"}
+          </button>
+
+          <button
+            className="btn-edit"
+            type="button"
+            onClick={() => deleteTemplate(template.template_id)}
+            style={{ background: "#fee2e2", color: "#b91c1c" }}
+          >
+            Delete
+          </button>
         </div>
       </div>
+    ))
+  )}
+  </div>
     </div>
   );
 }

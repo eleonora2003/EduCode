@@ -10,6 +10,7 @@ import Template from "./components/Template";
 import Validation from "./components/Validation";
 import Export from "./components/Export";
 import History from "./components/History";
+import AIWidget from "./components/AIWidget";
 
 function MainLayout() {
   const [currentPage, setCurrentPage] = useState("generate");
@@ -115,6 +116,7 @@ function MainLayout() {
         {currentPage === "export" && <Export />}
         {currentPage === "history" && <History />}
       </main>
+      <AIWidget />
     </div>
   );
 }
