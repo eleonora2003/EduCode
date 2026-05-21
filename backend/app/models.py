@@ -60,8 +60,12 @@ class Task(Base):
     examples = Column(Text, nullable=True)
     solution = Column(Text, nullable=True)
     tests = Column(Text, nullable=True)
+    passed_tests = Column(Integer, default=0)
+    total_tests = Column(Integer, default=0)
     is_validated = Column(Boolean, default=False, nullable=False)
-    validation_result = Column(JSON, nullable=True)  
+    validation_result = Column(JSON, nullable=True)
+    status = Column(String(20), default="pending")  
+    execution_time = Column(String(50), nullable=True)  
     created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
     updated_at = Column(DateTime(timezone=True), onupdate=func.now(), nullable=True)
 

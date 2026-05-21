@@ -1,7 +1,10 @@
 import { useState, useEffect } from "react";
 import { tasksAPI, validationAPI, templatesAPI } from "../api/client";
+import { useNavigate } from "react-router-dom";
 
-export default function GenerateTask({ task, setTask }) {
+export default function GenerateTask({ task, setTask, onNavigate }) {
+  const navigate = useNavigate();
+
   const [language, setLanguage] = useState("");
   const [concept, setConcept] = useState("");
   const [difficulty, setDifficulty] = useState("");
@@ -12,7 +15,9 @@ export default function GenerateTask({ task, setTask }) {
   const [activeTab, setActiveTab] = useState("description");
   const [generatedData, setGeneratedData] = useState(null);
   const [saved, setSaved] = useState(false);
-
+  const [taskId, setTaskId] = useState(null); 
+  const [isSaving, setIsSaving] = useState(false); 
+  const [isValidating, setIsValidating] = useState(false); 
   useEffect(() => {
     fetchTemplates();
   }, []);
@@ -60,63 +65,71 @@ template_id: template ? Number(template) : null,
   };
 
   const saveTask = async () => {
-    if (!generatedData) return;
+    if (!generatedData || isSaving || saved) return;
 
+    setIsSaving(true);
     try {
-      await tasksAPI.create({
+      const res = await tasksAPI.create({
         title: generatedData.title,
         description: generatedData.description,
         language: selectedTemplate?.description?.match(/Language:\s*(.*)/)?.[1] || language,
-concept: selectedTemplate?.concept || concept,
-difficulty: selectedTemplate?.difficulty || difficulty,
+        concept: selectedTemplate?.concept || concept,
+        difficulty: selectedTemplate?.difficulty || difficulty,
         template_name: selectedTemplate?.name || "",
         examples: generatedData.examples,
         solution: generatedData.solution,
         tests: generatedData.tests,
       });
 
+      setTaskId(res.data.id);
       setSaved(true);
     } catch (err) {
       console.error("Error saving task:", err);
-
       if (err.response?.status === 422) {
-        console.error("Validation errors:", err.response.data);
         alert("Failed to save task: Validation error. Check console for details.");
       } else {
         alert("Failed to save task. Please try again.");
       }
+    } finally {
+      setIsSaving(false);
     }
   };
 
   const validateSolution = async () => {
-    if (!generatedData) return;
+    if (!generatedData || isValidating) return;
+
+    setIsValidating(true);
 
     try {
-      const response = await tasksAPI.create({
-  title: generatedData.title,
-  description: generatedData.description,
-  language: selectedTemplate?.description?.match(/Language:\s*(.*)/)?.[1] || language,
-  concept: selectedTemplate?.concept || concept,
-  difficulty: selectedTemplate?.difficulty || difficulty,
-  template_name: selectedTemplate?.name || "",
-  examples: generatedData.examples,
-  solution: generatedData.solution,
-  tests: generatedData.tests,
-});
+      let currentTaskId = taskId;
 
-      const taskId = response.data.id;
-      const validationResponse = await validationAPI.validateSolution(taskId);
+      if (!currentTaskId) {
+        const res = await tasksAPI.create({
+          title: generatedData.title,
+          description: generatedData.description,
+          language: selectedTemplate?.description?.match(/Language:\s*(.*)/)?.[1] || language,
+          concept: selectedTemplate?.concept || concept,
+          difficulty: selectedTemplate?.difficulty || difficulty,
+          template_name: selectedTemplate?.name || "",
+          examples: generatedData.examples,
+          solution: generatedData.solution,
+          tests: generatedData.tests,
+        });
 
-      alert(`Validation Status: ${validationResponse.data.status}`);
-    } catch (err) {
-      console.error("Validation error:", err);
-
-      if (err.response?.status === 422) {
-        console.error("Validation errors:", err.response.data);
-        alert("Validation failed: Validation error. Check console for details.");
-      } else {
-        alert("Validation failed. Please check your Docker setup.");
+        currentTaskId = res.data.id;
+        setTaskId(currentTaskId);
+        setSaved(true);
       }
+
+      sessionStorage.setItem("runValidationId", currentTaskId);
+
+      onNavigate("validation");  
+
+    } catch (err) {
+      console.error(err);
+      alert("Failed to start validation.");
+    } finally {
+      setIsValidating(false);
     }
   };
 
@@ -350,12 +363,14 @@ difficulty: selectedTemplate?.difficulty || difficulty,
           </div>
 
           <div className="result-actions">
-            <button className="btn-secondary" onClick={validateSolution}>
-              <span>✓</span> Validate Solution
+            <button className="btn-secondary" onClick={validateSolution} disabled={isValidating}>
+              <span>{isValidating ? "⏳" : "✓"}</span> 
+              {isValidating ? "Validating..." : "Validate Solution"}
             </button>
 
-            <button className="btn-secondary" onClick={saveTask} disabled={saved}>
-              <span>💾</span> {saved ? "✓ Saved!" : "Save to History"}
+            <button className="btn-secondary" onClick={saveTask} disabled={saved || isSaving}>
+              <span>{isSaving ? "⏳" : "💾"}</span> 
+              {isSaving ? "Saving..." : saved ? "✓ Saved!" : "Save to History"}
             </button>
 
             <button

@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { tasksAPI, validationAPI, exportAPI } from "../api/client";
 
-export default function History() {
+export default function History({ onNavigate }) {
   const [tasks, setTasks] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selectedTask, setSelectedTask] = useState(null);
@@ -49,14 +49,24 @@ export default function History() {
     }
   };
 
-  const validateTask = async (taskId) => {
-    try {
-      const response = await validationAPI.validateSolution(taskId);
-      alert(`Validation Status: ${response.data.status}\nExecution Time: ${response.data.execution_time}ms`);
-      fetchTasks();
-    } catch (err) {
-      console.error("Validation error:", err);
-      alert("Validation failed. Make sure Docker is running.");
+  const validateTask = (task) => {
+    if (!task?.id) return;
+
+    if (task.is_validated) {
+      alert(`✅ Task is already validated!\n\n` +
+            `Title: ${task.title}\n` +
+            `Language: ${task.language}\n` +
+            `Difficulty: ${task.difficulty}\n\n` +
+            `You can view the results in the Validation dashboard.`);
+      return;
+    }
+
+    sessionStorage.setItem("runValidationId", task.id);
+
+    if (onNavigate) {
+      onNavigate("validation");
+    } else {
+      console.warn("onNavigate prop is missing");
     }
   };
 
@@ -231,9 +241,9 @@ export default function History() {
                   <td>{formatDate(task.created_at)}</td>
                   <td>
                     <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
-                      <button 
+                      <button
                         className="link-view"
-                        onClick={() => validateTask(task.id)}
+                        onClick={() => validateTask(task)}
                         title="Validate Solution"
                       >
                         ✓ Validate

@@ -96,6 +96,10 @@ class TaskResponse(TaskBase):
     validation_result: Optional[dict] = None
     created_at: datetime
     updated_at: Optional[datetime] = None
+    execution_time: Optional[str] = None
+    status: Optional[str] = None
+    passed_tests: Optional[int] = 0
+    total_tests: Optional[int] = 0
 
     class Config:
         from_attributes = True

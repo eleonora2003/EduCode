@@ -109,12 +109,12 @@ function MainLayout() {
       {/* Main Content */}
       <main className="main-content">
         {currentPage === "generate" && (
-          <GenerateTask task={task} setTask={setTask} />
+          <GenerateTask task={task} setTask={setTask} onNavigate={handleNavigate} />
         )}
         {currentPage === "templates" && <Template />}
         {currentPage === "validation" && <Validation />}
         {currentPage === "export" && <Export />}
-        {currentPage === "history" && <History />}
+        {currentPage === "history" && <History onNavigate={handleNavigate} />}
       </main>
       <AIWidget />
     </div>
