@@ -180,3 +180,18 @@ class ValidationStatistics(BaseModel):
     passed: int
     failed: int
     average_execution_time: float
+
+
+# ============ Chat Schemas ============
+
+class ChatMessage(BaseModel):
+    role: str  # "user" or "assistant"
+    content: str
+
+
+class ChatRequest(BaseModel):
+    messages: List[ChatMessage]
+
+
+class ChatResponse(BaseModel):
+    reply: str
