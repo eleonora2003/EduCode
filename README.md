@@ -188,3 +188,4 @@ This project uses GitHub Actions for continuous integration and deployment.
 1. **Build** - Builds Docker images for both backend and frontend
 2. **Tests** - Runs backend (pytest) and frontend (Jest) tests with coverage reporting
 3. **Deploy** - Deploys to the server using Docker Compose (only on main/master branch)
+
