@@ -78,4 +78,8 @@ export const exportAPI = {
   }),
 };
 
+export const chatAPI = {
+  send: (messages) => API.post("/api/chat", { messages }),
+};
+
 export default API;
