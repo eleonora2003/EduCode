@@ -1,7 +1,13 @@
+import os
 import pytest
 from unittest.mock import MagicMock, patch
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
+
+os.environ.setdefault("OPENAI_API_KEY", "test-openai-key")
+os.environ.setdefault("SECRET_KEY", "test-secret-key")
+os.environ.setdefault("DATABASE_URL", "sqlite:///./test.db")
+
 from app.database import Base, get_db
 from app.models import User, Task, Template
 from app.config import settings
