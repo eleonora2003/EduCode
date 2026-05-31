@@ -16,6 +16,12 @@ class Settings(BaseSettings):
     docker_socket: str = "/var/run/docker.sock"
     
     cors_origins: list = ["http://localhost:3000", "http://127.0.0.1:3000"]
+
+    google_client_id: str = ""
+    google_client_secret: str = ""
+
+    github_client_id: str = ""
+    github_client_secret: str = ""
     
     class Config:
         env_file = ".env"
