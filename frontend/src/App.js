@@ -11,6 +11,7 @@ import Validation from "./components/Validation";
 import Export from "./components/Export";
 import History from "./components/History";
 import AIWidget from "./components/AIWidget";
+import OAuthSuccess from "./pages/OAuthSuccess";
 
 function MainLayout() {
   const [currentPage, setCurrentPage] = useState("generate");
@@ -38,7 +39,7 @@ function MainLayout() {
   };
 
   if (!user) {
-    return null;
+    return <div>Loading...</div>;
   }
 
   return (
@@ -128,6 +129,7 @@ function App() {
         <Routes>
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
+          <Route path="/oauth-success" element={<OAuthSuccess />} />
 
           <Route element={<PrivateRoute />}>
             <Route path="/" element={<MainLayout />} />

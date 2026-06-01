@@ -4,7 +4,7 @@ from contextlib import asynccontextmanager
 
 from .config import settings
 from .database import engine, Base, init_db
-from .routers import auth, tasks, export, templates, validation, chat
+from .routers import auth, tasks, export, templates, validation, chat, oauth
 
 from .models import User, Task, Template
 
@@ -58,6 +58,7 @@ app.include_router(export.router)
 app.include_router(templates.router)
 app.include_router(validation.router)
 app.include_router(chat.router)
+app.include_router(oauth.router)
 
 
 if __name__ == "__main__":

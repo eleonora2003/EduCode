@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status, Response
 from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.orm import Session
 from datetime import timedelta
@@ -17,10 +17,10 @@ from ..config import settings
 router = APIRouter(prefix="/api/auth", tags=["Authentication"])
 
 
-@router.post("/register", response_model=UserResponse, status_code=status.HTTP_201_CREATED)
-def register(user: UserCreate, db: Session = Depends(get_db)):
+@router.post("/register", response_model=UserResponse)
+def register(user: UserCreate, response: Response, db: Session = Depends(get_db)):
     """
-    Register a new user.
+    Register a new user or link password to an existing OAuth account.
     
     - **email**: User's email address (must be unique)
     - **password**: Password (minimum 8 characters)
@@ -28,10 +28,21 @@ def register(user: UserCreate, db: Session = Depends(get_db)):
     """
     existing_user = db.query(User).filter(User.email == user.email).first()
     if existing_user:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Email already registered"
-        )
+        if existing_user.hashed_password is not None:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Email already registered"
+            )
+        
+        existing_user.hashed_password = get_password_hash(user.password)
+        if user.full_name and not existing_user.full_name:
+            existing_user.full_name = user.full_name
+            
+        db.commit()
+        db.refresh(existing_user)
+        
+        response.status_code = status.HTTP_200_OK
+        return existing_user
     
     db_user = User(
         email=user.email,
@@ -42,6 +53,7 @@ def register(user: UserCreate, db: Session = Depends(get_db)):
     db.commit()
     db.refresh(db_user)
     
+    response.status_code = status.HTTP_201_CREATED
     return db_user
 
 
