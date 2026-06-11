@@ -1,7 +1,6 @@
 import { useEffect, useState } from "react";
 import { tasksAPI, validationAPI } from "../api/client";
-
-export default function Validation() {
+export default function Validation({ onNavigate }) {
   const [tasks, setTasks] = useState([]);
   const [stats, setStats] = useState({
     total: 0,
@@ -63,16 +62,28 @@ export default function Validation() {
     try {
       const res = await validationAPI.validateSolution(taskId);
 
+      const result = res.data || {};
       const formattedLogs =
-        typeof res.data === "string"
-          ? res.data
-          : JSON.stringify(res.data, null, 2);
+        typeof result.logs === "string"
+          ? result.logs
+          : JSON.stringify(result, null, 2);
 
-      setLogs(formattedLogs);
+      const statusLine = result.passed
+        ? "PASSED — all tests succeeded"
+        : "FAILED — check the logs below";
 
-      fetchTasks(); 
+      setLogs(`${statusLine}\n\n${formattedLogs}`);
+      fetchTasks();
     } catch (err) {
-      setLogs(err.response?.data?.logs || "Validation failed");
+      const detail = err.response?.data?.detail;
+      const logs = err.response?.data?.logs;
+      setLogs(
+        logs ||
+          (typeof detail === "string" ? detail : JSON.stringify(detail, null, 2)) ||
+          err.message ||
+          "Validation failed"
+      );
+      fetchTasks();
     }
 
     setLoadingTaskId(null);
@@ -131,6 +142,17 @@ export default function Validation() {
       <div className="table-card">
         <h3>Generated Tasks</h3>
 
+        {tasks.length === 0 ? (
+          <button
+            type="button"
+            className="empty-action-card"
+            onClick={() => onNavigate?.("generate")}
+          >
+            <h3>No tasks to validate</h3>
+            <p>Generate a task first, then run validation here.</p>
+            <span className="empty-action-cta">Go to Generate</span>
+          </button>
+        ) : (
         <table className="tasks-table">
           <thead>
             <tr>
@@ -183,6 +205,7 @@ export default function Validation() {
             ))}
           </tbody>
         </table>
+        )}
       </div>
 
       <div className="logs-card">
@@ -190,6 +213,7 @@ export default function Validation() {
 
         <pre>{logs}</pre>
       </div>
+
     </div>
   );
 }
