@@ -1,7 +1,6 @@
 import { useState, useEffect } from "react";
 import { tasksAPI, exportAPI } from "../api/client";
-
-export default function Export() {
+export default function Export({ onNavigate }) {
   const [tasks, setTasks] = useState([]);
   const [selectedTasks, setSelectedTasks] = useState([]);
   const [exportFormat, setExportFormat] = useState("markdown");
@@ -122,7 +121,7 @@ export default function Export() {
           onClick={handleExport}
           disabled={selectedTasks.length === 0 || exporting}
         >
-          {exporting ? "⏳ Exporting..." : "📤 Export Selected Tasks"}
+          {exporting ? "Exporting..." : "Export Selected Tasks"}
         </button>
       </div>
 
@@ -131,10 +130,15 @@ export default function Export() {
         <h3>Select Tasks to Export</h3>
         
         {tasks.length === 0 ? (
-          <div className="placeholder-card">
-            <h2>No Tasks Available</h2>
-            <p>Generate some tasks first before exporting.</p>
-          </div>
+          <button
+            type="button"
+            className="empty-action-card"
+            onClick={() => onNavigate?.("generate")}
+          >
+            <h3>No tasks to export yet</h3>
+            <p>Generate your first task, then come back here to download it.</p>
+            <span className="empty-action-cta">Go to Generate</span>
+          </button>
         ) : (
           <>
             <div style={{ marginBottom: '16px', display: 'flex', gap: '8px' }}>
@@ -185,7 +189,7 @@ export default function Export() {
                     </td>
                     <td>
                       {task.is_validated ? (
-                        <span className="badge badge-passed">✓ Validated</span>
+                        <span className="badge badge-passed">Validated</span>
                       ) : (
                         <span className="badge badge-pending">Pending</span>
                       )}
@@ -235,6 +239,7 @@ export default function Export() {
           </div>
         )}
       </div>
+
     </div>
   );
 }
