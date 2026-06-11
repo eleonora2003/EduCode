@@ -43,6 +43,7 @@ export const authAPI = {
 
 export const tasksAPI = {
   generate: (data) => API.post("/api/tasks/generate", data),
+  refine: (data) => API.post("/api/tasks/refine", data),
   create: (data) => API.post("/api/tasks", data),
   getAll: (params) => API.get("/api/tasks", { params }),
   getById: (id) => API.get(`/api/tasks/${id}`),
@@ -76,6 +77,10 @@ export const exportAPI = {
   exportTaskPdf: (id) => API.get(`/api/export/${id}/pdf`, {
     responseType: "blob",
   }),
+};
+
+export const chatAPI = {
+  send: (messages) => API.post("/api/chat", { messages }),
 };
 
 export default API;

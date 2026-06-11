@@ -1,7 +1,6 @@
 import { useEffect, useState } from "react";
 import API from "../api/client";
-
-export default function Template() {
+export default function Template({ onNavigate, aiTemplateDraft, onDraftConsumed }) {
   const [step, setStep] = useState(0);
   const [templates, setTemplates] = useState([]);
   const [selectedTemplate, setSelectedTemplate] = useState(null);
@@ -70,6 +69,53 @@ export default function Template() {
   useEffect(() => {
     loadTemplates();
   }, []);
+
+  useEffect(() => {
+    if (!aiTemplateDraft) return;
+
+    const saveFromAI = async () => {
+      setTemplateName(aiTemplateDraft.name || "");
+      setLanguage(aiTemplateDraft.language || "Python");
+      setConcept(aiTemplateDraft.concept || "Loops");
+      setDifficulty(aiTemplateDraft.difficulty || "Basic");
+      setLearningGoals(aiTemplateDraft.learning_goals || "");
+      setRestrictions(aiTemplateDraft.restrictions || "");
+      setCodeTemplate(aiTemplateDraft.code_template || codeTemplate);
+      setStep(4);
+      setSaveMessage("Saving template from AI assistant...");
+
+      const description = `Language: ${aiTemplateDraft.language || "Python"}
+Concept: ${aiTemplateDraft.concept || "General"}
+Difficulty: ${aiTemplateDraft.difficulty || "Basic"}
+
+Learning Goals:
+${aiTemplateDraft.learning_goals || "None"}
+
+Restrictions:
+${aiTemplateDraft.restrictions || "None"}
+
+Code Template:
+${aiTemplateDraft.code_template || ""}`;
+
+      try {
+        await API.post("/api/templates", {
+          name: aiTemplateDraft.name,
+          description,
+          difficulty: aiTemplateDraft.difficulty || "Basic",
+          concept: aiTemplateDraft.concept || "General",
+        });
+        setSaveMessage("Template created and saved by AI assistant.");
+        await loadTemplates();
+      } catch (err) {
+        console.error(err);
+        setSaveMessage("AI filled the form but saving failed. Review and save manually.");
+      } finally {
+        onDraftConsumed?.();
+      }
+    };
+
+    saveFromAI();
+  }, [aiTemplateDraft]);
 
 
   const deleteTemplate = async (templateId) => {
@@ -141,12 +187,29 @@ ${codeTemplate}`;
         </div>
       </div>
 
+      <div className="hero-panel template-hero">
+        <div>
+          <h3>Build templates for consistent lessons</h3>
+          <p>Use templates when you want tasks to follow a familiar format, include learning goals, and reuse starter code across assignments.</p>
+        </div>
+        <div>
+          <strong>Tip:</strong> Click any step above to jump between setup stages. This wizard keeps your template creation fast and interactive.
+        </div>
+      </div>
+
       <div className="progress-steps" role="tablist" aria-label="Template steps">
         {steps.map((label, i) => (
-          <div key={label} className={`step ${i <= step ? "active" : ""}`}>
+          <button
+            key={label}
+            type="button"
+            className={`step ${i <= step ? "active" : ""} ${i > step ? "disabled" : ""}`}
+            onClick={() => i <= step && setStep(i)}
+            disabled={i > step}
+            aria-current={i === step ? "step" : undefined}
+          >
             <div className="step-circle">{i < step ? "✓" : i + 1}</div>
             <div className="step-label">{label}</div>
-          </div>
+          </button>
         ))}
       </div>
 
@@ -319,7 +382,7 @@ ${codeTemplate}`;
               onClick={handleSaveTemplate}
               disabled={isSaving}
             >
-              {isSaving ? "Saving..." : "💾 Save Template"}
+              {isSaving ? "Saving..." : "Save Template"}
             </button>
 
             {saveMessage && (
@@ -379,6 +442,7 @@ ${codeTemplate}`;
     ))
   )}
   </div>
+
     </div>
   );
 }

@@ -8,11 +8,10 @@ from ..config import settings
 
 class GenerationService:
     """Service for AI-powered task generation using OpenAI."""
-    
     def __init__(self):
         """Initialize OpenAI client."""
         self.client = OpenAI(api_key=settings.openai_api_key)
-    
+
     def generate_task(
         self,
         language: str,
@@ -20,21 +19,9 @@ class GenerationService:
         difficulty: str,
         template_name: str = "Default Template"
     ) -> Dict:
-        """
-        Generate a programming task using AI.
-        
-        Args:
-            language: Programming language (Python or Java)
-            concept: Programming concept to focus on
-            difficulty: Difficulty level
-            template_name: Template style to use
-            
-        Returns:
-            Dictionary with generated task components
-        """
         system_prompt = self._get_system_prompt(language, template_name)
         user_prompt = self._get_user_prompt(language, concept, difficulty, template_name)
-        
+
         try:
             response = self.client.chat.completions.create(
                 model="gpt-4o-mini",
@@ -46,19 +33,20 @@ class GenerationService:
                 max_tokens=3000,
                 response_format={"type": "json_object"}
             )
-            
+
             result = response.choices[0].message.content
-            
+
             try:
                 parsed = json.loads(result)
-                # Convert examples to string if it's a list
+
                 examples = parsed.get("examples", "")
                 if isinstance(examples, list):
                     examples = self._format_examples_list(examples)
-                # Convert tests to string if it's a list
+
                 tests = parsed.get("tests", "")
                 if isinstance(tests, list):
-                    tests = self._format_tests_list(tests)
+                    tests = self._format_tests_list(tests, language)
+
                 return {
                     "title": parsed.get("title", "Generated Task"),
                     "description": parsed.get("description", ""),
@@ -70,10 +58,16 @@ class GenerationService:
                     "difficulty": difficulty,
                     "template_name": template_name
                 }
+
             except json.JSONDecodeError:
-                # Fallback: try to extract sections from non-JSON response
-                return self._parse_raw_response(result, language, concept, difficulty, template_name)
-                
+                return self._parse_raw_response(
+                    result,
+                    language,
+                    concept,
+                    difficulty,
+                    template_name
+                )
+
         except Exception as e:
             return {
                 "title": "Error generating task",
@@ -86,11 +80,10 @@ class GenerationService:
                 "difficulty": difficulty,
                 "template_name": template_name
             }
-    
+
     def _get_system_prompt(self, language: str, template_name: str) -> str:
-        """Get the system prompt for task generation."""
-        
         base_prompt = """You are an expert programming educator that creates comprehensive programming exercises.
+
 Your task is to generate a complete programming exercise including:
 1. A clear, descriptive title
 2. A detailed task description with clear requirements
@@ -108,49 +101,139 @@ IMPORTANT: Return your response as valid JSON with exactly these fields:
 }
 
 Rules:
-- All code must be properly formatted and escaped for JSON (use \\n for newlines, escape quotes)
-- The solution must be complete and working
-- Tests should cover multiple cases including edge cases
-- Match the difficulty level appropriately"""
+- All code must be properly formatted and escaped for JSON.
+- Use \\n for newlines.
+- Escape quotes when needed.
+- The solution must be complete and working.
+- Tests should cover multiple cases including edge cases.
+- Match the difficulty level appropriately.
+"""
 
-        # Add template-specific instructions
+        if language == "Java":
+            base_prompt += """
+STRICT JAVA OUTPUT RULES:
+- The solution field MUST contain exactly one public class named Solution.
+- The solution must start with: public class Solution
+- Do NOT use another public class name.
+- Do NOT generate public class names based on the task title.
+- Helper classes must be non-public or nested inside Solution.
+
+- The tests field MUST contain exactly one public class named TestSolution.
+- The tests must start with: public class TestSolution OR import java.util.Arrays; followed by public class TestSolution.
+- TestSolution MUST contain public static void main(String[] args).
+- Do NOT use JUnit.
+- Do NOT import org.junit.
+- Do NOT use @Test.
+- Do NOT use assertEquals or assertArrayEquals.
+- Use plain Java assert statements only.
+- If comparing arrays, use java.util.Arrays.equals().
+- At the end of main, print exactly:
+=== ALL TESTS PASSED ===
+
+- The Java code must compile with:
+javac Solution.java TestSolution.java
+
+- The Java tests must run with:
+java -ea -cp /app TestSolution
+"""
+
+        if language == "Python":
+            base_prompt += """
+STRICT PYTHON OUTPUT RULES:
+- The solution field must contain valid Python code.
+- Tests must use plain assert statements.
+- Do not use pytest or unittest.
+- The tests should be executable directly after importing the solution.
+"""
+
         template_instructions = self._get_template_instructions(template_name, language)
-        
+
         return base_prompt + "\n\n" + template_instructions
-    
+
     def _get_template_instructions(self, template_name: str, language: str) -> str:
-        """Get template-specific instructions."""
-        
         templates = {
             "Default Template": "Create a standard programming exercise with clear instructions and examples.",
-            
-            "Algorithm Challenge": f"""Focus on algorithmic thinking. The task should:
+
+            "Algorithm Challenge": """Focus on algorithmic thinking. The task should:
 - Require implementing a specific algorithm
 - Include time/space complexity considerations
 - Have clear input/output specifications
 - Test problem-solving skills""",
-            
-            "Data Structure Practice": f"""Focus on data structure usage. The task should:
-- Require using specific data structures (arrays, lists, trees, etc.)
+
+            "Data Structure Practice": """Focus on data structure usage. The task should:
+- Require using specific data structures such as arrays, lists, trees, maps, or sets
 - Emphasize proper data structure operations
 - Include edge cases related to the data structure""",
-            
-            "Real-World Problem": f"""Create a practical, real-world scenario. The task should:
+
+            "Real-World Problem": """Create a practical, real-world scenario. The task should:
 - Present a realistic use case
 - Include context about why this problem matters
 - Have inputs/outputs that resemble real data""",
-            
-            "Code Optimization": f"""Focus on optimization. The task should:
+
+            "Code Optimization": """Focus on optimization. The task should:
 - Start with a naive approach description
 - Ask for an optimized solution
 - Include performance requirements
 - Mention specific complexity targets"""
         }
-        
+
         return templates.get(template_name, templates["Default Template"])
-    
-    def _get_user_prompt(self, language: str, concept: str, difficulty: str, template_name: str) -> str:
-        """Get the user prompt for task generation."""
+
+    def _get_user_prompt(
+        self,
+        language: str,
+        concept: str,
+        difficulty: str,
+        template_name: str
+    ) -> str:
+        java_rules = ""
+
+        if language == "Java":
+            java_rules = """
+JAVA REQUIREMENTS:
+The generated Java solution MUST follow this structure:
+
+public class Solution {
+    // methods here
+}
+
+The generated Java tests MUST follow this structure:
+
+public class TestSolution {
+    public static void main(String[] args) {
+        Solution s = new Solution();
+
+        // plain assert tests here
+
+        System.out.println("=== ALL TESTS PASSED ===");
+    }
+}
+
+Rules for Java:
+- Do NOT use JUnit.
+- Do NOT use import org.junit.
+- Do NOT use @Test.
+- Do NOT use assertEquals.
+- Do NOT use assertArrayEquals.
+- Use Java built-in assert only.
+- If the solution methods are static, call them as Solution.methodName(...).
+- If the solution methods are not static, create Solution s = new Solution().
+- If comparing arrays, include import java.util.Arrays; and use Arrays.equals(...).
+- The solution class name must be Solution.
+- The test class name must be TestSolution.
+"""
+
+        python_rules = ""
+
+        if language == "Python":
+            python_rules = """
+PYTHON REQUIREMENTS:
+- Use plain Python assert statements.
+- Do NOT use pytest.
+- Do NOT use unittest.
+- Tests must be executable directly.
+"""
+
         return f"""Create a {difficulty.lower()} difficulty programming exercise in {language} focusing on: {concept}.
 
 Requirements:
@@ -160,34 +243,43 @@ Requirements:
 - Template Style: {template_name}
 
 For the solution code:
-- Use proper {language} syntax and conventions
-- Include clear comments explaining the approach
-- Handle edge cases appropriately for the difficulty level
+- Use proper {language} syntax and conventions.
+- Include clear comments explaining the approach.
+- Handle edge cases appropriately for the difficulty level.
 
-For the tests:
-- Write executable test code in {language}
-- Include at least 3-5 test cases
+For the tests (Python only):
+- Write plain executable test code using assert statements at module level (NOT pytest, NOT unittest classes)
+- Example: assert function_name(2, 3) == 5
+- Function names in tests must exactly match those defined in the solution
+- Include at least 3-5 assert statements
 - Cover basic cases, edge cases, and error handling if appropriate
 
 Generate a complete, self-contained exercise that a student could work on independently."""
-    
-    def _parse_raw_response(self, raw_text: str, language: str, concept: str, difficulty: str, template_name: str) -> Dict:
-        """Parse a non-JSON response into structured format."""
-        
-        # Try to extract sections using common patterns
+
+    def _parse_raw_response(
+        self,
+        raw_text: str,
+        language: str,
+        concept: str,
+        difficulty: str,
+        template_name: str
+    ) -> Dict:
         title = "Generated Task"
         description = raw_text
         examples = ""
         solution = ""
         tests = ""
-        
+
         if "## Description" in raw_text or "**Description**" in raw_text:
-            parts = self._extract_section(raw_text, ["Description", "Solution", "Tests", "Examples"])
+            parts = self._extract_section(
+                raw_text,
+                ["Description", "Solution", "Tests", "Examples"]
+            )
             description = parts.get("Description", raw_text)
             solution = parts.get("Solution", "")
             tests = parts.get("Tests", "")
             examples = parts.get("Examples", "")
-        
+
         return {
             "title": title,
             "description": description,
@@ -199,51 +291,52 @@ Generate a complete, self-contained exercise that a student could work on indepe
             "difficulty": difficulty,
             "template_name": template_name
         }
-    
+
     def _format_examples_list(self, examples: list) -> str:
-        """Convert a list of example objects to a formatted string."""
         if not examples:
             return ""
-        
+
         formatted_lines = []
+
         for i, example in enumerate(examples, 1):
             if isinstance(example, dict):
                 input_val = example.get("input", "")
                 output_val = example.get("output", "")
+
                 formatted_lines.append(f"Example {i}:")
                 formatted_lines.append(f"  Input: {input_val}")
                 formatted_lines.append(f"  Output: {output_val}")
                 formatted_lines.append("")
             else:
                 formatted_lines.append(str(example))
-        
+
         return "\n".join(formatted_lines).strip()
-    
-    def _format_tests_list(self, tests: list) -> str:
-        """Convert a list of test objects to a formatted string."""
+
+    def _format_tests_list(self, tests: list, language: Optional[str] = None) -> str:
         if not tests:
             return ""
-        
+
         formatted_lines = []
+
         for i, test in enumerate(tests, 1):
             if isinstance(test, dict):
                 description = test.get("description", "")
                 code = test.get("code", test.get("test_code", ""))
-                if description:
+
+                if description and language != "Java":
                     formatted_lines.append(f"# Test {i}: {description}")
+
                 formatted_lines.append(code)
-                formatted_lines.append("")  
+                formatted_lines.append("")
             else:
                 formatted_lines.append(str(test))
-        
+
         return "\n".join(formatted_lines).strip()
-    
+
     def _extract_section(self, text: str, section_names: list) -> dict:
-        """Extract sections from text based on headers."""
         result = {}
-        
+
         for i, section in enumerate(section_names):
-            # Try different header formats
             patterns = [
                 f"## {section}",
                 f"**{section}**",
@@ -251,58 +344,211 @@ Generate a complete, self-contained exercise that a student could work on indepe
                 f"{section}:",
                 f"---\n{section}"
             ]
-            
+
             start_idx = -1
+
             for pattern in patterns:
                 idx = text.find(pattern)
+
                 if idx != -1:
                     start_idx = idx + len(pattern)
-                    # Skip any colons or whitespace after the header
-                    while start_idx < len(text) and text[start_idx] in [':', ' ', '\n', '\t']:
+
+                    while start_idx < len(text) and text[start_idx] in [":", " ", "\n", "\t"]:
                         start_idx += 1
+
                     break
-            
+
             if start_idx != -1:
-                # Find the end of this section (start of next section or end of text)
                 end_idx = len(text)
-                for next_section in section_names[i+1:]:
-                    for next_pattern in [f"## {next_section}", f"**{next_section}**", f"### {next_section}"]:
+
+                for next_section in section_names[i + 1:]:
+                    for next_pattern in [
+                        f"## {next_section}",
+                        f"**{next_section}**",
+                        f"### {next_section}"
+                    ]:
                         next_idx = text.find(next_pattern, start_idx)
+
                         if next_idx != -1 and next_idx < end_idx:
                             end_idx = next_idx
-                
+
                 content = text[start_idx:end_idx].strip()
                 result[section] = content
-        
+
         return result
     
+    def refine_section(
+        self,
+        field: str,
+        instruction: str,
+        content: str,
+        selected_text: Optional[str] = None,
+        context: Optional[Dict] = None,
+    ) -> Dict:
+        """Refine a task section with a professor's custom instruction."""
+        context = context or {}
+        language = context.get("language", "Python")
+        selection_note = (
+            f'The professor selected this exact portion to change:\n"""{selected_text}"""\n'
+            if selected_text
+            else "No text was selected — refine the entire section as needed.\n"
+        )
+
+        task_context = f"""Task title: {context.get('title', 'Untitled')}
+Language: {language}
+Concept: {context.get('concept', 'General')}
+Difficulty: {context.get('difficulty', 'Basic')}
+
+Current description:
+{context.get('description', '')}
+
+Current examples:
+{context.get('examples', '')}
+
+Current solution:
+{context.get('solution', '')}
+
+Current tests:
+{context.get('tests', '')}"""
+
+        if field == "solution":
+            system_prompt = f"""You are an expert programming educator helping a professor fine-tune an exercise.
+The professor gives precise instructions — follow them exactly while keeping code working.
+
+When refining the solution you MUST also rewrite the unit tests so they pass against the new solution.
+Return valid JSON with exactly:
+{{
+  "content": "the complete updated solution code",
+  "tests": "complete updated test code"
+}}
+
+Test rules ({language}):
+- Use plain assert statements at module level (NOT pytest, NOT unittest classes)
+- Function names in tests must exactly match those in the solution
+- Include at least 3-5 assert statements
+- Cover basic, edge, and error cases where appropriate"""
+
+            user_prompt = f"""{task_context}
+
+Section being refined: reference solution
+Professor's instruction: {instruction}
+
+{selection_note}
+Current solution content:
+\"\"\"
+{content}
+\"\"\"
+
+Apply the instruction. Return the full updated solution and matching tests."""
+
+            response_format = {"type": "json_object"}
+        elif field == "tests":
+            system_prompt = f"""You are an expert programming educator helping a professor fine-tune unit tests.
+Return valid JSON with exactly: {{"content": "the complete updated test code"}}
+
+Test rules ({language}):
+- Use plain assert statements at module level (NOT pytest, NOT unittest classes)
+- Function names must exactly match the reference solution
+- Tests must validate the existing solution correctly"""
+
+            user_prompt = f"""{task_context}
+
+Section being refined: unit tests
+Professor's instruction: {instruction}
+
+{selection_note}
+Current tests:
+\"\"\"
+{content}
+\"\"\"
+
+Apply the instruction. Return the full updated tests."""
+
+            response_format = {"type": "json_object"}
+        else:
+            system_prompt = """You are an expert programming educator helping a professor fine-tune exercise text.
+Return valid JSON with exactly: {"content": "the complete updated section text"}
+Keep the same language as the original. Preserve formatting where appropriate."""
+
+            user_prompt = f"""{task_context}
+
+Section being refined: {field}
+Professor's instruction: {instruction}
+
+{selection_note}
+Current {field} content:
+\"\"\"
+{content}
+\"\"\"
+
+Apply the instruction. Return the full updated section."""
+
+            response_format = {"type": "json_object"}
+
+        try:
+            response = self.client.chat.completions.create(
+                model="gpt-4o-mini",
+                messages=[
+                    {"role": "system", "content": system_prompt},
+                    {"role": "user", "content": user_prompt},
+                ],
+                temperature=0.5,
+                max_tokens=3000,
+                response_format=response_format,
+            )
+
+            parsed = json.loads(response.choices[0].message.content)
+            refined_content = parsed.get("content", content)
+            updated_tests = parsed.get("tests") if field == "solution" else None
+
+            return {
+                "field": field,
+                "content": refined_content,
+                "tests": updated_tests,
+            }
+        except Exception as e:
+            return {
+                "field": field,
+                "content": content,
+                "tests": None,
+                "error": str(e),
+            }
+
     def generate_test_variants(self, base_test: str, language: str, count: int = 3) -> list:
         """Generate variations of a test case."""
         
         prompt = f"""Given this {language} test code:
 {base_test}
 
-Generate {count} variations of this test with different inputs. 
+Generate {count} variations of this test with different inputs.
 Return as a JSON array of objects with 'description' and 'test_code' fields."""
-        
+
         try:
             response = self.client.chat.completions.create(
                 model="gpt-4o-mini",
                 messages=[
-                    {"role": "system", "content": "You are a programming test generator."},
-                    {"role": "user", "content": prompt}
+                    {
+                        "role": "system",
+                        "content": "You are a programming test generator."
+                    },
+                    {
+                        "role": "user",
+                        "content": prompt
+                    }
                 ],
                 temperature=0.8,
                 max_tokens=2000,
                 response_format={"type": "json_object"}
             )
-            
+
             result = response.choices[0].message.content
             parsed = json.loads(result)
+
             return parsed.get("variants", [])
-            
+
         except Exception:
             return []
 
 
 generation_service = GenerationService()
+
