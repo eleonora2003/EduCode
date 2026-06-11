@@ -11,6 +11,24 @@ export default function AIWidget() {
     }
   ]);
   const [loading, setLoading] = useState(false);
+  const messagesEndRef = useRef(null);
+
+  const [internalOpen, setInternalOpen] = useState(false);
+  const open = showAI !== undefined ? showAI : internalOpen;
+  const setOpen = setShowAI || setInternalOpen;
+
+  useEffect(() => {
+    if (messagesEndRef.current) {
+      messagesEndRef.current.scrollIntoView({ behavior: "smooth" });
+    }
+  }, [messages]);
+
+  const handleKeyPress = (e) => {
+    if (e.key === "Enter" && !e.shiftKey) {
+      e.preventDefault();
+      send();
+    }
+  };
 
   const send = async () => {
     const text = input.trim();
