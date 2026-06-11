@@ -247,13 +247,12 @@ For the solution code:
 - Include clear comments explaining the approach.
 - Handle edge cases appropriately for the difficulty level.
 
-For the tests:
-- Write executable test code in {language}.
-- Include at least 3-5 test cases.
-- Cover basic cases and edge cases.
-
-{java_rules}
-{python_rules}
+For the tests (Python only):
+- Write plain executable test code using assert statements at module level (NOT pytest, NOT unittest classes)
+- Example: assert function_name(2, 3) == 5
+- Function names in tests must exactly match those defined in the solution
+- Include at least 3-5 assert statements
+- Cover basic cases, edge cases, and error handling if appropriate
 
 Generate a complete, self-contained exercise that a student could work on independently."""
 
@@ -377,13 +376,147 @@ Generate a complete, self-contained exercise that a student could work on indepe
                 result[section] = content
 
         return result
-
-    def generate_test_variants(
+    
+    def refine_section(
         self,
-        base_test: str,
-        language: str,
-        count: int = 3
-    ) -> list:
+        field: str,
+        instruction: str,
+        content: str,
+        selected_text: Optional[str] = None,
+        context: Optional[Dict] = None,
+    ) -> Dict:
+        """Refine a task section with a professor's custom instruction."""
+        context = context or {}
+        language = context.get("language", "Python")
+        selection_note = (
+            f'The professor selected this exact portion to change:\n"""{selected_text}"""\n'
+            if selected_text
+            else "No text was selected — refine the entire section as needed.\n"
+        )
+
+        task_context = f"""Task title: {context.get('title', 'Untitled')}
+Language: {language}
+Concept: {context.get('concept', 'General')}
+Difficulty: {context.get('difficulty', 'Basic')}
+
+Current description:
+{context.get('description', '')}
+
+Current examples:
+{context.get('examples', '')}
+
+Current solution:
+{context.get('solution', '')}
+
+Current tests:
+{context.get('tests', '')}"""
+
+        if field == "solution":
+            system_prompt = f"""You are an expert programming educator helping a professor fine-tune an exercise.
+The professor gives precise instructions — follow them exactly while keeping code working.
+
+When refining the solution you MUST also rewrite the unit tests so they pass against the new solution.
+Return valid JSON with exactly:
+{{
+  "content": "the complete updated solution code",
+  "tests": "complete updated test code"
+}}
+
+Test rules ({language}):
+- Use plain assert statements at module level (NOT pytest, NOT unittest classes)
+- Function names in tests must exactly match those in the solution
+- Include at least 3-5 assert statements
+- Cover basic, edge, and error cases where appropriate"""
+
+            user_prompt = f"""{task_context}
+
+Section being refined: reference solution
+Professor's instruction: {instruction}
+
+{selection_note}
+Current solution content:
+\"\"\"
+{content}
+\"\"\"
+
+Apply the instruction. Return the full updated solution and matching tests."""
+
+            response_format = {"type": "json_object"}
+        elif field == "tests":
+            system_prompt = f"""You are an expert programming educator helping a professor fine-tune unit tests.
+Return valid JSON with exactly: {{"content": "the complete updated test code"}}
+
+Test rules ({language}):
+- Use plain assert statements at module level (NOT pytest, NOT unittest classes)
+- Function names must exactly match the reference solution
+- Tests must validate the existing solution correctly"""
+
+            user_prompt = f"""{task_context}
+
+Section being refined: unit tests
+Professor's instruction: {instruction}
+
+{selection_note}
+Current tests:
+\"\"\"
+{content}
+\"\"\"
+
+Apply the instruction. Return the full updated tests."""
+
+            response_format = {"type": "json_object"}
+        else:
+            system_prompt = """You are an expert programming educator helping a professor fine-tune exercise text.
+Return valid JSON with exactly: {"content": "the complete updated section text"}
+Keep the same language as the original. Preserve formatting where appropriate."""
+
+            user_prompt = f"""{task_context}
+
+Section being refined: {field}
+Professor's instruction: {instruction}
+
+{selection_note}
+Current {field} content:
+\"\"\"
+{content}
+\"\"\"
+
+Apply the instruction. Return the full updated section."""
+
+            response_format = {"type": "json_object"}
+
+        try:
+            response = self.client.chat.completions.create(
+                model="gpt-4o-mini",
+                messages=[
+                    {"role": "system", "content": system_prompt},
+                    {"role": "user", "content": user_prompt},
+                ],
+                temperature=0.5,
+                max_tokens=3000,
+                response_format=response_format,
+            )
+
+            parsed = json.loads(response.choices[0].message.content)
+            refined_content = parsed.get("content", content)
+            updated_tests = parsed.get("tests") if field == "solution" else None
+
+            return {
+                "field": field,
+                "content": refined_content,
+                "tests": updated_tests,
+            }
+        except Exception as e:
+            return {
+                "field": field,
+                "content": content,
+                "tests": None,
+                "error": str(e),
+            }
+
+    def generate_test_variants(self, base_test: str, language: str, count: int = 3) -> list:
+        """Generate variations of a test case."""
+        
         prompt = f"""Given this {language} test code:
 {base_test}
 
