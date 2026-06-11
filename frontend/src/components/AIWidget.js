@@ -12,7 +12,6 @@ export default function AIWidget({ showAI, setShowAI, onTemplateGenerated }) {
   const [loading, setLoading] = useState(false);
   const messagesEndRef = useRef(null);
 
-  // Default to internal state if props not provided
   const [internalOpen, setInternalOpen] = useState(false);
   const open = showAI !== undefined ? showAI : internalOpen;
   const setOpen = setShowAI || setInternalOpen;
