@@ -220,7 +220,7 @@ describe('GenerateTask Component', () => {
         expect(screen.getByText('Test Task Title')).toBeInTheDocument();
       });
 
-      expect(screen.getByText('📝 Task Description')).toBeInTheDocument();
+      expect(screen.getByText('Task Description')).toBeInTheDocument();
       expect(screen.getByText('This is a test task description.')).toBeInTheDocument();
     });
 
@@ -238,7 +238,7 @@ describe('GenerateTask Component', () => {
         expect(screen.getByText('Test Task Title')).toBeInTheDocument();
       });
 
-      fireEvent.click(screen.getByText('💡 Reference Solution'));
+      fireEvent.click(screen.getByText('Reference Solution'));
       
       await waitFor(() => {
         expect(screen.getByText(/def solution/i)).toBeInTheDocument();
@@ -259,7 +259,7 @@ describe('GenerateTask Component', () => {
         expect(screen.getByText('Test Task Title')).toBeInTheDocument();
       });
 
-      fireEvent.click(screen.getByText('🧪 Unit Tests'));
+      fireEvent.click(screen.getByText('Unit Tests'));
       
       await waitFor(() => {
         expect(screen.getByText(/def test_solution/i)).toBeInTheDocument();
@@ -282,7 +282,7 @@ describe('GenerateTask Component', () => {
         expect(screen.getByText('Test Task Title')).toBeInTheDocument();
       });
 
-      fireEvent.click(screen.getByText('💡 Reference Solution'));
+      fireEvent.click(screen.getByText('Reference Solution'));
       fireEvent.click(screen.getByRole('button', { name: /copy code/i }));
 
       await waitFor(() => {
@@ -304,7 +304,7 @@ describe('GenerateTask Component', () => {
         expect(screen.getByText('Test Task Title')).toBeInTheDocument();
       });
 
-      fireEvent.click(screen.getByText('🧪 Unit Tests'));
+      fireEvent.click(screen.getByText('Unit Tests'));
       fireEvent.click(screen.getByRole('button', { name: /copy tests/i }));
 
       await waitFor(() => {
@@ -406,11 +406,11 @@ describe('GenerateTask Component', () => {
       fireEvent.click(screen.getByRole('button', { name: /generate complete task/i }));
 
       await waitFor(() => {
-        expect(screen.getByText(/🐍 Python/i)).toBeInTheDocument();
+        expect(screen.getByText(/Python/i)).toBeInTheDocument();
       });
     });
 
-    it('should display language icon for Java', async () => {
+    it('should display language for Java', async () => {
       mockGenerate.mockResolvedValueOnce({ data: mockGeneratedTask });
 
       const { container } = renderWithRouter(
@@ -421,7 +421,7 @@ describe('GenerateTask Component', () => {
       fireEvent.click(screen.getByRole('button', { name: /generate complete task/i }));
 
       await waitFor(() => {
-        expect(screen.getByText(/☕ Java/i)).toBeInTheDocument();
+        expect(screen.getByText(/Java/i)).toBeInTheDocument();
       });
     });
   });

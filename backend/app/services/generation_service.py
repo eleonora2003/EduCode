@@ -388,8 +388,8 @@ Generate a complete, self-contained exercise that a student could work on indepe
                 result[section] = content
 
         return result
-
-    def generate_test_variants(
+    
+    def refine_section(
         self,
         field: str,
         instruction: str,

@@ -95,8 +95,8 @@ def validate_solution(
     task.status = validation_result["status"]
     task.execution_time = str(execution_time)
     task.validation_result = validation_result
-    task.passed_tests = validation_result["passed_tests"]
-    task.total_tests = validation_result["total_tests"]
+    task.passed_tests = result["passed_tests"]
+    task.total_tests = result["total_tests"]
 
     db.commit()
     db.refresh(task)

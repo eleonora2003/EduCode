@@ -362,6 +362,7 @@ export default function Validation({ onNavigate }) {
           )}
         </div>
       </div>
+
     </div>
   );
 }

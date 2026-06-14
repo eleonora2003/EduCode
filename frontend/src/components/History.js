@@ -53,7 +53,7 @@ export default function History({ onNavigate }) {
     if (!task?.id) return;
 
     if (task.is_validated) {
-      alert(`✅ Task is already validated!\n\n` +
+      alert(`Task is already validated!\n\n` +
             `Title: ${task.title}\n` +
             `Language: ${task.language}\n` +
             `Difficulty: ${task.difficulty}\n\n` +
@@ -196,10 +196,15 @@ export default function History({ onNavigate }) {
         <h3>Your Tasks ({tasks.length})</h3>
         
         {tasks.length === 0 ? (
-          <div className="placeholder-card">
-            <h2>No Tasks Yet</h2>
-            <p>Generate your first programming task to get started!</p>
-          </div>
+          <button
+            type="button"
+            className="empty-action-card"
+            onClick={() => onNavigate?.("generate")}
+          >
+            <h3>No tasks yet</h3>
+            <p>Generate your first programming assignment to see it here.</p>
+            <span className="empty-action-cta">Create a task</span>
+          </button>
         ) : (
           <table className="tasks-table">
             <thead>
@@ -233,7 +238,7 @@ export default function History({ onNavigate }) {
                   </td>
                   <td>
                     {task.is_validated ? (
-                      <span className="badge badge-passed">✓ Validated</span>
+                      <span className="badge badge-passed">Validated</span>
                     ) : (
                       <span className="badge badge-pending">Pending</span>
                     )}
@@ -246,21 +251,21 @@ export default function History({ onNavigate }) {
                         onClick={() => validateTask(task)}
                         title="Validate Solution"
                       >
-                        ✓ Validate
+                        Validate
                       </button>
                       <button 
                         className="link-view"
                         onClick={() => exportTask(task.id, 'markdown')}
                         title="Export as Markdown"
                       >
-                        📄 MD
+                        MD
                       </button>
                       <button 
                         className="link-view"
                         onClick={() => exportTask(task.id, 'pdf')}
                         title="Export as PDF"
                       >
-                        📕 PDF
+                        PDF
                       </button>
                       <button 
                         className="link-view"
@@ -268,7 +273,7 @@ export default function History({ onNavigate }) {
                         onClick={() => deleteTask(task.id)}
                         title="Delete Task"
                       >
-                        🗑️
+                        Delete
                       </button>
                     </div>
                   </td>
@@ -292,7 +297,7 @@ export default function History({ onNavigate }) {
               className="tab active"
               onClick={() => {}}
             >
-              📝 Description
+              Description
             </button>
           </div>
 
@@ -328,6 +333,7 @@ export default function History({ onNavigate }) {
           </div>
         </div>
       )}
+
     </div>
   );
 }
