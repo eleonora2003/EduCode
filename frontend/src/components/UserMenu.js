@@ -1,0 +1,188 @@
+import { useEffect, useRef, useState } from "react";
+import {
+  IconUser,
+  IconHistory,
+  IconSettings,
+  IconLogout,
+  IconClose,
+} from "./icons";
+
+function splitName(fullName) {
+  if (!fullName) return { firstName: "—", lastName: "—" };
+  const parts = fullName.trim().split(/\s+/);
+  if (parts.length === 1) return { firstName: parts[0], lastName: "—" };
+  return { firstName: parts[0], lastName: parts.slice(1).join(" ") };
+}
+
+export default function UserMenu({
+  user,
+  open,
+  onToggle,
+  onClose,
+  onNavigate,
+  onLogout,
+  theme,
+  onThemeChange,
+}) {
+  const menuRef = useRef(null);
+  const [overlay, setOverlay] = useState(null);
+
+  useEffect(() => {
+    if (!open) return undefined;
+
+    const handleClickOutside = (e) => {
+      if (menuRef.current && !menuRef.current.contains(e.target)) {
+        onClose();
+      }
+    };
+
+    const handleEscape = (e) => {
+      if (e.key === "Escape") {
+        if (overlay) setOverlay(null);
+        else onClose();
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    document.addEventListener("keydown", handleEscape);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+      document.removeEventListener("keydown", handleEscape);
+    };
+  }, [open, onClose, overlay]);
+
+  const fullName = user?.full_name || user?.name || "";
+  const { firstName, lastName } = splitName(fullName);
+  const displayName = fullName || (user?.email ? user.email.split("@")[0] : "User");
+
+  const openOverlay = (view) => {
+    setOverlay(view);
+    onClose();
+  };
+
+  const menuItems = [
+    { id: "profile", label: "My Profile", icon: IconUser, action: () => openOverlay("profile") },
+    { id: "history", label: "Task History", icon: IconHistory, action: () => { onNavigate("history"); onClose(); } },
+    { id: "settings", label: "Preferences", icon: IconSettings, action: () => openOverlay("preferences") },
+  ];
+
+  return (
+    <>
+      <div className="user-menu-wrapper" ref={menuRef}>
+        <button
+          type="button"
+          className={`user-menu-trigger ${open ? "open" : ""}`}
+          onClick={onToggle}
+          aria-expanded={open}
+          aria-haspopup="true"
+        >
+          <div className="user-avatar-header">
+            {user?.email ? user.email.charAt(0).toUpperCase() : "U"}
+          </div>
+          <div className="user-info-header">
+            <span className="user-name-header">{displayName}</span>
+            <span className="user-role-header">Teacher</span>
+          </div>
+          <svg className={`user-menu-chevron ${open ? "open" : ""}`} width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+            <path d="m6 9 6 6 6-6" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" />
+          </svg>
+        </button>
+
+        {open && (
+          <div className="user-dropdown" role="menu">
+            <div className="user-dropdown-header">
+              <div className="user-avatar-header large">
+                {user?.email ? user.email.charAt(0).toUpperCase() : "U"}
+              </div>
+              <div>
+                <div className="user-dropdown-name">{displayName}</div>
+                <div className="user-dropdown-email">{user?.email}</div>
+              </div>
+            </div>
+            <div className="user-dropdown-divider" />
+            {menuItems.map((item) => {
+              const Icon = item.icon;
+              return (
+                <button key={item.id} type="button" className="user-dropdown-item" role="menuitem" onClick={item.action}>
+                  <span className="user-dropdown-icon"><Icon /></span>
+                  {item.label}
+                </button>
+              );
+            })}
+            <div className="user-dropdown-divider" />
+            <button type="button" className="user-dropdown-item danger" role="menuitem" onClick={() => { onClose(); onLogout(); }}>
+              <span className="user-dropdown-icon"><IconLogout /></span>
+              Sign Out
+            </button>
+          </div>
+        )}
+      </div>
+
+      {overlay === "profile" && (
+        <div className="profile-overlay" onClick={() => setOverlay(null)}>
+          <div className="profile-panel" onClick={(e) => e.stopPropagation()} role="dialog">
+            <div className="profile-panel-header">
+              <h2>My Profile</h2>
+              <button type="button" className="profile-close" onClick={() => setOverlay(null)} aria-label="Close">
+                <IconClose />
+              </button>
+            </div>
+            <div className="profile-avatar-section">
+              <div className="profile-avatar-large">
+                {user?.email ? user.email.charAt(0).toUpperCase() : "U"}
+              </div>
+            </div>
+            <div className="profile-details">
+              <div className="profile-detail-row">
+                <span className="profile-detail-label">Name</span>
+                <span className="profile-detail-value">{firstName}</span>
+              </div>
+              <div className="profile-detail-row">
+                <span className="profile-detail-label">Surname</span>
+                <span className="profile-detail-value">{lastName}</span>
+              </div>
+              <div className="profile-detail-row">
+                <span className="profile-detail-label">Email</span>
+                <span className="profile-detail-value">{user?.email || "—"}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {overlay === "preferences" && (
+        <div className="profile-overlay" onClick={() => setOverlay(null)}>
+          <div className="profile-panel" onClick={(e) => e.stopPropagation()} role="dialog">
+            <div className="profile-panel-header">
+              <h2>Preferences</h2>
+              <button type="button" className="profile-close" onClick={() => setOverlay(null)} aria-label="Close">
+                <IconClose />
+              </button>
+            </div>
+            <div className="pref-section">
+              <span className="pref-label">Theme</span>
+              <div className="theme-picker">
+                <button
+                  type="button"
+                  className={`theme-option ${theme === "light" ? "active" : ""}`}
+                  onClick={() => onThemeChange("light")}
+                >
+                  <span className="theme-swatch light" />
+                  Light
+                </button>
+                <button
+                  type="button"
+                  className={`theme-option ${theme === "dark" ? "active" : ""}`}
+                  onClick={() => onThemeChange("dark")}
+                >
+                  <span className="theme-swatch dark" />
+                  Dark
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+    </>
+  );
+}
