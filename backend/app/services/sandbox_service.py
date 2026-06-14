@@ -137,73 +137,146 @@ print("=== ALL TESTS PASSED ===")
                 pass
 
 
+def _java_default_imports(code: str) -> str:
+    imports = []
+    if "import java." not in code:
+        imports.extend(["import java.util.*;", "import java.io.*;"])
+    if "Arrays." in code and "import java.util.Arrays" not in code:
+        imports.append("import java.util.Arrays;")
+    if not imports:
+        return code
+    return "\n".join(imports) + "\n\n" + code
+
+
+def _inject_java_success_marker(code: str) -> str:
+    if "=== ALL TESTS PASSED ===" in code:
+        return code
+
+    main_match = re.search(
+        r"public\s+static\s+void\s+main\s*\([^)]*\)\s*\{",
+        code,
+    )
+    if not main_match:
+        return code + '\nSystem.out.println("=== ALL TESTS PASSED ===");'
+
+    start = main_match.end()
+    depth = 1
+    index = start
+    while index < len(code) and depth > 0:
+        char = code[index]
+        if char == "{":
+            depth += 1
+        elif char == "}":
+            depth -= 1
+            if depth == 0:
+                marker = '\n        System.out.println("=== ALL TESTS PASSED ===");\n    '
+                return code[:index] + marker + code[index:]
+        index += 1
+
+    return code
+
+
 def _normalize_java_solution(solution_code: str) -> str:
     code = solution_code.strip()
 
-    imports = """import java.util.*;
-import java.io.*;
-"""
+    code = re.sub(r"import\s+org\.junit\.[^;]+;", "", code)
+    code = re.sub(r"@Test\s*", "", code)
 
     if "public class Solution" not in code:
-        code = re.sub(
-            r"public\s+class\s+\w+",
-            "public class Solution",
-            code,
-            count=1
-        )
+        if re.search(r"public\s+class\s+\w+", code):
+            code = re.sub(
+                r"public\s+class\s+\w+",
+                "public class Solution",
+                code,
+                count=1,
+            )
+        else:
+            code = f"public class Solution {{\n{code}\n}}"
 
-    if "import java." not in code:
-        code = imports + "\n" + code
-
-    return code
+    return _java_default_imports(code)
 
 
 def _normalize_java_tests(test_code: str) -> str:
     code = test_code.strip()
 
-    imports = """import java.util.*;
-import java.io.*;
-"""
+    code = re.sub(r"import\s+org\.junit\.[^;]+;", "", code)
+    code = re.sub(r"import\s+static\s+org\.junit\.[^;]+;", "", code)
+    code = re.sub(r"@Test\s*", "", code)
 
-    code = re.sub(
-        r"import\s+org\.junit\.[^;]+;",
-        "",
-        code
-    )
-    code = re.sub(r"@Test", "", code)
+    has_test_class = re.search(r"public\s+class\s+TestSolution\b", code)
+    has_main = "public static void main" in code
 
-    if "public class TestSolution" not in code:
-        code = re.sub(
-            r"public\s+class\s+\w+",
-            "public class TestSolution",
-            code,
-            count=1
-        )
-
-    if "public static void main" not in code:
-        code = f"""
-public class TestSolution {{
+    if not has_test_class:
+        if re.search(r"public\s+class\s+\w+", code):
+            code = re.sub(
+                r"public\s+class\s+\w+",
+                "public class TestSolution",
+                code,
+                count=1,
+            )
+            has_test_class = True
+        else:
+            code = f"""public class TestSolution {{
     public static void main(String[] args) {{
         {code}
     }}
-}}
-"""
+}}"""
+            has_test_class = True
+            has_main = True
 
-    if "=== ALL TESTS PASSED ===" not in code:
-        last_brace = code.rfind("}")
-        second_last_brace = code.rfind("}", 0, last_brace)
+    if has_test_class and not has_main:
+        class_match = re.search(
+            r"public\s+class\s+TestSolution\s*\{([\s\S]*)\}\s*$",
+            code,
+        )
+        inner = class_match.group(1).strip() if class_match else code
+        code = f"""public class TestSolution {{
+    public static void main(String[] args) {{
+        {inner}
+    }}
+}}"""
 
-        if second_last_brace != -1:
-            code = (
-                code[:second_last_brace]
-                + '\n        System.out.println("=== ALL TESTS PASSED ===");\n'
-                + code[second_last_brace:]
-            )
+    code = _inject_java_success_marker(code)
+    return _java_default_imports(code)
 
-    if "import java." not in code:
-        code = imports + "\n" + code
 
-    return code
+def summarize_validation_failure(logs: str, language: str = "Python") -> str:
+    if not logs or logs.strip() == "No output received":
+        return "Validation failed with no output from the sandbox."
+
+    if logs.startswith("Compilation failed:"):
+        detail = logs[len("Compilation failed:"):].strip()
+        return detail.split("\n")[0][:500] or "Java compilation failed."
+
+    if "AssertionError" in logs:
+        for line in logs.split("\n"):
+            if "AssertionError" in line:
+                return line.strip()[:500]
+
+    if "SyntaxError" in logs:
+        for line in logs.split("\n"):
+            if "SyntaxError" in line or "File " in line:
+                return line.strip()[:500]
+
+    if "Exception in thread" in logs or "Exception:" in logs:
+        for line in logs.split("\n"):
+            if "Exception" in line:
+                return line.strip()[:500]
+
+    if "STDERR:" in logs:
+        stderr = logs.split("STDERR:", 1)[1].strip()
+        meaningful = [line for line in stderr.split("\n") if line.strip()]
+        if meaningful:
+            return "\n".join(meaningful[:5])[:500]
+
+    if logs.startswith("Error:"):
+        return logs.split("\n")[0][:500]
+
+    meaningful = [line for line in logs.split("\n") if line.strip()]
+    if meaningful:
+        return "\n".join(meaningful[:6])[:500]
+
+    return f"{language} validation failed. See full logs for details."
 
 
 def run_java_validation(solution_code: str, test_code: str) -> Dict:

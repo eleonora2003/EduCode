@@ -247,12 +247,7 @@ For the solution code:
 - Include clear comments explaining the approach.
 - Handle edge cases appropriately for the difficulty level.
 
-For the tests (Python only):
-- Write plain executable test code using assert statements at module level (NOT pytest, NOT unittest classes)
-- Example: assert function_name(2, 3) == 5
-- Function names in tests must exactly match those defined in the solution
-- Include at least 3-5 assert statements
-- Cover basic cases, edge cases, and error handling if appropriate
+{python_rules}{java_rules}
 
 Generate a complete, self-contained exercise that a student could work on independently."""
 
@@ -333,6 +328,23 @@ Generate a complete, self-contained exercise that a student could work on indepe
 
         return "\n".join(formatted_lines).strip()
 
+    def _get_test_rules(self, language: str) -> str:
+        if language == "Java":
+            return """Test rules (Java):
+- Use exactly one public class named TestSolution with public static void main(String[] args)
+- Do NOT use JUnit, @Test, assertEquals, or assertArrayEquals
+- Use plain Java assert statements only (run with java -ea)
+- If comparing arrays, use java.util.Arrays.equals()
+- End main with: System.out.println("=== ALL TESTS PASSED ===");
+- Include at least 3-5 assert statements
+- Cover basic, edge, and error cases where appropriate"""
+
+        return """Test rules (Python):
+- Use plain assert statements at module level (NOT pytest, NOT unittest classes)
+- Function names in tests must exactly match those in the solution
+- Include at least 3-5 assert statements
+- Cover basic, edge, and error cases where appropriate"""
+
     def _extract_section(self, text: str, section_names: list) -> dict:
         result = {}
 
@@ -412,6 +424,7 @@ Current tests:
 {context.get('tests', '')}"""
 
         if field == "solution":
+            test_rules = self._get_test_rules(language)
             system_prompt = f"""You are an expert programming educator helping a professor fine-tune an exercise.
 The professor gives precise instructions — follow them exactly while keeping code working.
 
@@ -422,11 +435,7 @@ Return valid JSON with exactly:
   "tests": "complete updated test code"
 }}
 
-Test rules ({language}):
-- Use plain assert statements at module level (NOT pytest, NOT unittest classes)
-- Function names in tests must exactly match those in the solution
-- Include at least 3-5 assert statements
-- Cover basic, edge, and error cases where appropriate"""
+{test_rules}"""
 
             user_prompt = f"""{task_context}
 
@@ -443,12 +452,11 @@ Apply the instruction. Return the full updated solution and matching tests."""
 
             response_format = {"type": "json_object"}
         elif field == "tests":
+            test_rules = self._get_test_rules(language)
             system_prompt = f"""You are an expert programming educator helping a professor fine-tune unit tests.
 Return valid JSON with exactly: {{"content": "the complete updated test code"}}
 
-Test rules ({language}):
-- Use plain assert statements at module level (NOT pytest, NOT unittest classes)
-- Function names must exactly match the reference solution
+{test_rules}
 - Tests must validate the existing solution correctly"""
 
             user_prompt = f"""{task_context}
@@ -511,6 +519,105 @@ Apply the instruction. Return the full updated section."""
                 "field": field,
                 "content": content,
                 "tests": None,
+                "error": str(e),
+            }
+
+    def fix_validation_failure(
+        self,
+        title: str,
+        description: str,
+        examples: str,
+        language: str,
+        concept: str,
+        difficulty: str,
+        solution: str,
+        tests: str,
+        validation_logs: str,
+        failure_reason: str = "",
+    ) -> Dict:
+        """Rewrite solution and tests from scratch after a validation failure."""
+        test_rules = self._get_test_rules(language)
+        failure_summary = failure_reason or validation_logs[:1500]
+
+        if language == "Java":
+            solution_rules = """
+Java solution rules:
+- Exactly one public class named Solution
+- Code must compile with: javac Solution.java TestSolution.java
+"""
+        else:
+            solution_rules = """
+Python solution rules:
+- Valid Python module importable as solution.py
+- Tests import with: from solution import *
+"""
+
+        system_prompt = f"""You are an expert programming educator fixing broken exercise code.
+Validation failed in a sandbox. Rewrite the solution and tests from scratch so they work together.
+
+Return valid JSON with exactly:
+{{
+  "solution": "complete working solution code",
+  "tests": "complete working test code",
+  "explanation": "brief plain-language summary of what was wrong and what you changed"
+}}
+
+{solution_rules}
+{test_rules}"""
+
+        user_prompt = f"""Task title: {title}
+Language: {language}
+Concept: {concept}
+Difficulty: {difficulty}
+
+Description:
+{description}
+
+Examples:
+{examples}
+
+Why validation failed:
+{failure_summary}
+
+Full validation logs:
+{validation_logs[:4000]}
+
+Current broken solution:
+\"\"\"
+{solution}
+\"\"\"
+
+Current broken tests:
+\"\"\"
+{tests}
+\"\"\"
+
+Rewrite both files from scratch. Keep the same educational goal, but make the code compile/run and pass all tests in the sandbox."""
+
+        try:
+            response = self.client.chat.completions.create(
+                model="gpt-4o-mini",
+                messages=[
+                    {"role": "system", "content": system_prompt},
+                    {"role": "user", "content": user_prompt},
+                ],
+                temperature=0.3,
+                max_tokens=4000,
+                response_format={"type": "json_object"},
+            )
+
+            parsed = json.loads(response.choices[0].message.content)
+
+            return {
+                "solution": parsed.get("solution", solution),
+                "tests": parsed.get("tests", tests),
+                "explanation": parsed.get("explanation"),
+            }
+        except Exception as e:
+            return {
+                "solution": solution,
+                "tests": tests,
+                "explanation": None,
                 "error": str(e),
             }
 
