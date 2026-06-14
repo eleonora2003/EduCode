@@ -247,13 +247,7 @@ For the solution code:
 - Include clear comments explaining the approach.
 - Handle edge cases appropriately for the difficulty level.
 
-For the tests:
-- Write executable test code in {language}.
-- Include at least 3-5 test cases.
-- Cover basic cases and edge cases.
-
-{java_rules}
-{python_rules}
+{python_rules}{java_rules}
 
 Generate a complete, self-contained exercise that a student could work on independently."""
 
@@ -334,6 +328,23 @@ Generate a complete, self-contained exercise that a student could work on indepe
 
         return "\n".join(formatted_lines).strip()
 
+    def _get_test_rules(self, language: str) -> str:
+        if language == "Java":
+            return """Test rules (Java):
+- Use exactly one public class named TestSolution with public static void main(String[] args)
+- Do NOT use JUnit, @Test, assertEquals, or assertArrayEquals
+- Use plain Java assert statements only (run with java -ea)
+- If comparing arrays, use java.util.Arrays.equals()
+- End main with: System.out.println("=== ALL TESTS PASSED ===");
+- Include at least 3-5 assert statements
+- Cover basic, edge, and error cases where appropriate"""
+
+        return """Test rules (Python):
+- Use plain assert statements at module level (NOT pytest, NOT unittest classes)
+- Function names in tests must exactly match those in the solution
+- Include at least 3-5 assert statements
+- Cover basic, edge, and error cases where appropriate"""
+
     def _extract_section(self, text: str, section_names: list) -> dict:
         result = {}
 
@@ -380,10 +391,239 @@ Generate a complete, self-contained exercise that a student could work on indepe
 
     def generate_test_variants(
         self,
-        base_test: str,
+        field: str,
+        instruction: str,
+        content: str,
+        selected_text: Optional[str] = None,
+        context: Optional[Dict] = None,
+    ) -> Dict:
+        """Refine a task section with a professor's custom instruction."""
+        context = context or {}
+        language = context.get("language", "Python")
+        selection_note = (
+            f'The professor selected this exact portion to change:\n"""{selected_text}"""\n'
+            if selected_text
+            else "No text was selected — refine the entire section as needed.\n"
+        )
+
+        task_context = f"""Task title: {context.get('title', 'Untitled')}
+Language: {language}
+Concept: {context.get('concept', 'General')}
+Difficulty: {context.get('difficulty', 'Basic')}
+
+Current description:
+{context.get('description', '')}
+
+Current examples:
+{context.get('examples', '')}
+
+Current solution:
+{context.get('solution', '')}
+
+Current tests:
+{context.get('tests', '')}"""
+
+        if field == "solution":
+            test_rules = self._get_test_rules(language)
+            system_prompt = f"""You are an expert programming educator helping a professor fine-tune an exercise.
+The professor gives precise instructions — follow them exactly while keeping code working.
+
+When refining the solution you MUST also rewrite the unit tests so they pass against the new solution.
+Return valid JSON with exactly:
+{{
+  "content": "the complete updated solution code",
+  "tests": "complete updated test code"
+}}
+
+{test_rules}"""
+
+            user_prompt = f"""{task_context}
+
+Section being refined: reference solution
+Professor's instruction: {instruction}
+
+{selection_note}
+Current solution content:
+\"\"\"
+{content}
+\"\"\"
+
+Apply the instruction. Return the full updated solution and matching tests."""
+
+            response_format = {"type": "json_object"}
+        elif field == "tests":
+            test_rules = self._get_test_rules(language)
+            system_prompt = f"""You are an expert programming educator helping a professor fine-tune unit tests.
+Return valid JSON with exactly: {{"content": "the complete updated test code"}}
+
+{test_rules}
+- Tests must validate the existing solution correctly"""
+
+            user_prompt = f"""{task_context}
+
+Section being refined: unit tests
+Professor's instruction: {instruction}
+
+{selection_note}
+Current tests:
+\"\"\"
+{content}
+\"\"\"
+
+Apply the instruction. Return the full updated tests."""
+
+            response_format = {"type": "json_object"}
+        else:
+            system_prompt = """You are an expert programming educator helping a professor fine-tune exercise text.
+Return valid JSON with exactly: {"content": "the complete updated section text"}
+Keep the same language as the original. Preserve formatting where appropriate."""
+
+            user_prompt = f"""{task_context}
+
+Section being refined: {field}
+Professor's instruction: {instruction}
+
+{selection_note}
+Current {field} content:
+\"\"\"
+{content}
+\"\"\"
+
+Apply the instruction. Return the full updated section."""
+
+            response_format = {"type": "json_object"}
+
+        try:
+            response = self.client.chat.completions.create(
+                model="gpt-4o-mini",
+                messages=[
+                    {"role": "system", "content": system_prompt},
+                    {"role": "user", "content": user_prompt},
+                ],
+                temperature=0.5,
+                max_tokens=3000,
+                response_format=response_format,
+            )
+
+            parsed = json.loads(response.choices[0].message.content)
+            refined_content = parsed.get("content", content)
+            updated_tests = parsed.get("tests") if field == "solution" else None
+
+            return {
+                "field": field,
+                "content": refined_content,
+                "tests": updated_tests,
+            }
+        except Exception as e:
+            return {
+                "field": field,
+                "content": content,
+                "tests": None,
+                "error": str(e),
+            }
+
+    def fix_validation_failure(
+        self,
+        title: str,
+        description: str,
+        examples: str,
         language: str,
-        count: int = 3
-    ) -> list:
+        concept: str,
+        difficulty: str,
+        solution: str,
+        tests: str,
+        validation_logs: str,
+        failure_reason: str = "",
+    ) -> Dict:
+        """Rewrite solution and tests from scratch after a validation failure."""
+        test_rules = self._get_test_rules(language)
+        failure_summary = failure_reason or validation_logs[:1500]
+
+        if language == "Java":
+            solution_rules = """
+Java solution rules:
+- Exactly one public class named Solution
+- Code must compile with: javac Solution.java TestSolution.java
+"""
+        else:
+            solution_rules = """
+Python solution rules:
+- Valid Python module importable as solution.py
+- Tests import with: from solution import *
+"""
+
+        system_prompt = f"""You are an expert programming educator fixing broken exercise code.
+Validation failed in a sandbox. Rewrite the solution and tests from scratch so they work together.
+
+Return valid JSON with exactly:
+{{
+  "solution": "complete working solution code",
+  "tests": "complete working test code",
+  "explanation": "brief plain-language summary of what was wrong and what you changed"
+}}
+
+{solution_rules}
+{test_rules}"""
+
+        user_prompt = f"""Task title: {title}
+Language: {language}
+Concept: {concept}
+Difficulty: {difficulty}
+
+Description:
+{description}
+
+Examples:
+{examples}
+
+Why validation failed:
+{failure_summary}
+
+Full validation logs:
+{validation_logs[:4000]}
+
+Current broken solution:
+\"\"\"
+{solution}
+\"\"\"
+
+Current broken tests:
+\"\"\"
+{tests}
+\"\"\"
+
+Rewrite both files from scratch. Keep the same educational goal, but make the code compile/run and pass all tests in the sandbox."""
+
+        try:
+            response = self.client.chat.completions.create(
+                model="gpt-4o-mini",
+                messages=[
+                    {"role": "system", "content": system_prompt},
+                    {"role": "user", "content": user_prompt},
+                ],
+                temperature=0.3,
+                max_tokens=4000,
+                response_format={"type": "json_object"},
+            )
+
+            parsed = json.loads(response.choices[0].message.content)
+
+            return {
+                "solution": parsed.get("solution", solution),
+                "tests": parsed.get("tests", tests),
+                "explanation": parsed.get("explanation"),
+            }
+        except Exception as e:
+            return {
+                "solution": solution,
+                "tests": tests,
+                "explanation": None,
+                "error": str(e),
+            }
+
+    def generate_test_variants(self, base_test: str, language: str, count: int = 3) -> list:
+        """Generate variations of a test case."""
+        
         prompt = f"""Given this {language} test code:
 {base_test}
 

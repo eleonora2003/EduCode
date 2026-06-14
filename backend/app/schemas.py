@@ -87,6 +87,12 @@ class TaskUpdate(BaseModel):
     description: Optional[str] = None
     solution: Optional[str] = None
     tests: Optional[str] = None
+    status: Optional[str] = None
+    is_validated: Optional[bool] = None
+    validation_result: Optional[dict] = None
+    passed_tests: Optional[int] = None
+    total_tests: Optional[int] = None
+    execution_time: Optional[str] = None
 
 
 class TaskResponse(TaskBase):
@@ -127,6 +133,13 @@ class TaskGenerateResponse(BaseModel):
     examples: Optional[str] = None
     solution: Optional[str] = None
     tests: Optional[str] = None
+
+
+class ValidationFixResponse(BaseModel):
+    solution: str
+    tests: str
+    explanation: Optional[str] = None
+    message: str
 
 
 # ============ Template Schemas ============
