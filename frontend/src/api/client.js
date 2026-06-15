@@ -54,10 +54,10 @@ export const tasksAPI = {
 };
 
 export const validationAPI = {
-  execute: (data) => API.post("/api/validation/execute", data),
-  validateSolution: (taskId) => API.post(`/api/validation/validate-solution?task_id=${taskId}`),
-  getLogs: (taskId) => API.get(`/api/validation/${taskId}/logs`),
-  getOverview: () => API.get("/api/validation/statistics/overview"),
+  validateSolution: (taskId, force = true) =>
+    API.post(`/api/validation/validate-solution?task_id=${taskId}&force=${force}`),
+  fixWithAI: (taskId) =>
+    API.post(`/api/validation/fix-with-ai?task_id=${taskId}`),
 };
 
 export const templatesAPI = {
