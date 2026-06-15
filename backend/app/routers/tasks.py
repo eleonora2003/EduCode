@@ -9,7 +9,8 @@ from ..schemas import (
     TaskCreate, TaskResponse, TaskUpdate,
     TaskGenerateRequest, TaskGenerateResponse,
     TaskRefineRequest, TaskRefineResponse,
-    TaskStatistics
+    TaskStatistics,
+    ExerciseSeriesRequest, ExerciseSeriesResponse, ExerciseItem,
 )
 from ..auth import get_current_user
 from ..services.task_service import TaskService
@@ -87,6 +88,59 @@ Use this custom template:
         language=language,
         concept=concept,
         difficulty=difficulty,
+    )
+
+
+@router.post("/generate-series", response_model=ExerciseSeriesResponse)
+def generate_exercise_series(
+    request: ExerciseSeriesRequest,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    """Generate a progressive exercise series (Exercise 1, 2, 3…)."""
+    selected_template = None
+    template_name = request.template or "Default Template"
+    language = request.language
+    concept = request.concept
+
+    if request.template_id:
+        selected_template = db.query(Template).filter(
+            Template.template_id == request.template_id,
+            Template.user_id == current_user.id,
+        ).first()
+
+        if not selected_template:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Template not found",
+            )
+
+        language = language or extract_language_from_description(selected_template.description)
+        concept = concept or selected_template.concept or "General"
+        template_name = f"""{selected_template.name}
+
+Use this custom template:
+{selected_template.description}
+"""
+
+    if not all([language, concept]):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Missing language or concept for series generation",
+        )
+
+    result = generation_service.generate_exercise_series(
+        language=language,
+        concept=concept,
+        template_name=template_name,
+        exercise_count=request.exercise_count,
+    )
+
+    return ExerciseSeriesResponse(
+        series_title=result["series_title"],
+        language=result["language"],
+        concept=result["concept"],
+        exercises=[ExerciseItem(**ex) for ex in result["exercises"]],
     )
 
 

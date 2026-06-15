@@ -43,6 +43,7 @@ export const authAPI = {
 
 export const tasksAPI = {
   generate: (data) => API.post("/api/tasks/generate", data),
+  generateSeries: (data) => API.post("/api/tasks/generate-series", data),
   refine: (data) => API.post("/api/tasks/refine", data),
   create: (data) => API.post("/api/tasks", data),
   getAll: (params) => API.get("/api/tasks", { params }),

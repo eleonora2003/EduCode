@@ -150,6 +150,47 @@ class TaskGenerateResponse(BaseModel):
     difficulty: Optional[str] = None
 
 
+class ExerciseSeriesRequest(BaseModel):
+    language: Optional[str] = None
+    concept: Optional[str] = None
+    template: str = "Default Template"
+    template_id: Optional[int] = None
+    exercise_count: int = Field(default=3, ge=2, le=5)
+
+    @field_validator('language')
+    @classmethod
+    def validate_series_language(cls, v):
+        if v is None:
+            return v
+        allowed_languages = ['Python', 'Java']
+        if v not in allowed_languages:
+            raise ValueError(f'Language must be one of: {", ".join(allowed_languages)}.')
+        return v
+
+    @model_validator(mode='after')
+    def validate_series_request_mode(self):
+        if self.template_id is None and not all([self.language, self.concept]):
+            raise ValueError('language and concept are required when template_id is not provided')
+        return self
+
+
+class ExerciseItem(BaseModel):
+    exercise_number: int
+    title: str
+    description: str
+    examples: Optional[str] = None
+    solution: Optional[str] = None
+    tests: Optional[str] = None
+    difficulty: str
+
+
+class ExerciseSeriesResponse(BaseModel):
+    series_title: str
+    language: str
+    concept: str
+    exercises: List[ExerciseItem]
+
+
 class TaskRefineContext(BaseModel):
     title: Optional[str] = None
     language: Optional[str] = "Python"

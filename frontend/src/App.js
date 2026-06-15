@@ -13,6 +13,7 @@ import Export from "./components/Export";
 import History from "./components/History";
 import AIWidget from "./components/AIWidget";
 import OnboardingModal from "./components/OnboardingModal";
+import CommandPalette, { useCommandShortcuts } from "./components/CommandPalette";
 import OAuthSuccess from "./pages/OAuthSuccess";
 import UserMenu from "./components/UserMenu";
 
@@ -103,6 +104,7 @@ function MainLayout() {
   const [userMenuOpen, setUserMenuOpen] = useState(false);
   const [theme, setTheme] = useState(() => localStorage.getItem("theme") || "light");
   const [aiTemplateDraft, setAiTemplateDraft] = useState(null);
+  const [commandPaletteOpen, setCommandPaletteOpen] = useState(false);
   const { user, logout } = useAuth();
 
   useEffect(() => {
@@ -136,6 +138,12 @@ function MainLayout() {
     setCurrentPage(page);
     window.history.pushState(null, "", `/${page === "dashboard" ? "" : page}`);
   };
+
+  useCommandShortcuts({
+    onNavigate: handleNavigate,
+    onOpenAI: () => setShowAI(true),
+    onTogglePalette: () => setCommandPaletteOpen((v) => !v),
+  });
 
   if (!user) {
     return <div>Loading...</div>;
@@ -183,7 +191,7 @@ function MainLayout() {
       </header>
 
       {/* Main Content */}
-      <main className="main-content-new">
+      <main className="main-content-new" key={currentPage}>
         {currentPage === "dashboard" && (
           <Dashboard onNavigate={handleNavigate} onOpenAI={() => setShowAI(true)} />
         )}
@@ -255,6 +263,23 @@ function MainLayout() {
           handleNavigate("templates");
         }}
       />
+
+      <CommandPalette
+        open={commandPaletteOpen}
+        onClose={() => setCommandPaletteOpen(false)}
+        onNavigate={handleNavigate}
+        onOpenAI={() => setShowAI(true)}
+      />
+
+      <button
+        type="button"
+        className="cmd-palette-hint"
+        onClick={() => setCommandPaletteOpen(true)}
+        aria-label="Open command palette"
+        title="Command palette (Ctrl+K)"
+      >
+        <kbd>Ctrl+K</kbd>
+      </button>
     </div>
   );
 }

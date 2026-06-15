@@ -549,6 +549,113 @@ Return as a JSON array of objects with 'description' and 'test_code' fields."""
         except Exception:
             return []
 
+    _SERIES_DIFFICULTIES = ["Basic", "Intermediate", "Advanced", "Advanced", "Advanced"]
+
+    def generate_exercise_series(
+        self,
+        language: str,
+        concept: str,
+        template_name: str = "Default Template",
+        exercise_count: int = 3,
+    ) -> Dict:
+        """Generate a progressive exercise series (Exercise 1 → 2 → 3…)."""
+        exercise_count = max(2, min(5, exercise_count))
+        exercises = []
+        previous_summaries = []
+
+        for i in range(exercise_count):
+            exercise_num = i + 1
+            difficulty = self._SERIES_DIFFICULTIES[i]
+            prior_context = ""
+            if previous_summaries:
+                prior_context = (
+                    "\n\nPrevious exercises in this series (build on these — do NOT repeat them):\n"
+                    + "\n".join(previous_summaries)
+                )
+
+            system_prompt = self._get_system_prompt(language, template_name)
+            system_prompt += """
+
+EXERCISE SERIES RULES:
+- This is one exercise in a progressive school/faculty exercise set on the SAME concept.
+- Each exercise must be noticeably harder than the previous one.
+- Exercise 1: warm-up / fundamentals. Exercise 2: moderate challenge. Exercise 3+: advanced application.
+- Title MUST start with "Exercise N:" where N is the exercise number.
+- Do not copy prior exercise scenarios — evolve the problem while staying on the same concept.
+"""
+
+            user_prompt = f"""Create Exercise {exercise_num} of {exercise_count} in a progressive programming exercise series.
+
+- Language: {language}
+- Concept: {concept}
+- Difficulty for this exercise: {difficulty}
+- Template Style: {template_name}
+- Position: Exercise {exercise_num} of {exercise_count}{prior_context}
+
+The student completes exercises in order during a class or lab session.
+Make this exercise standalone but clearly part of the same learning arc.
+
+Return valid JSON with exactly: title, description, examples, solution, tests."""
+
+            try:
+                response = self.client.chat.completions.create(
+                    model="gpt-4o-mini",
+                    messages=[
+                        {"role": "system", "content": system_prompt},
+                        {"role": "user", "content": user_prompt},
+                    ],
+                    temperature=0.7,
+                    max_tokens=3000,
+                    response_format={"type": "json_object"},
+                )
+
+                parsed = json.loads(response.choices[0].message.content)
+
+                examples = parsed.get("examples", "")
+                if isinstance(examples, list):
+                    examples = self._format_examples_list(examples)
+
+                tests = parsed.get("tests", "")
+                if isinstance(tests, list):
+                    tests = self._format_tests_list(tests, language)
+
+                title = parsed.get("title", f"Exercise {exercise_num}")
+                if not title.lower().startswith(f"exercise {exercise_num}"):
+                    title = f"Exercise {exercise_num}: {title.lstrip(': ')}"
+
+                exercise = {
+                    "exercise_number": exercise_num,
+                    "title": title,
+                    "description": parsed.get("description", ""),
+                    "examples": examples,
+                    "solution": parsed.get("solution", ""),
+                    "tests": tests,
+                    "difficulty": difficulty,
+                }
+                exercises.append(exercise)
+
+                summary = f"- Exercise {exercise_num} ({difficulty}): {title} — {parsed.get('description', '')[:120]}..."
+                previous_summaries.append(summary)
+
+            except Exception as e:
+                exercises.append({
+                    "exercise_number": exercise_num,
+                    "title": f"Exercise {exercise_num}: Error",
+                    "description": f"Failed to generate exercise: {str(e)}",
+                    "examples": "",
+                    "solution": "",
+                    "tests": "",
+                    "difficulty": difficulty,
+                })
+
+        series_title = f"{concept} — Exercise Series ({language})"
+        return {
+            "series_title": series_title,
+            "language": language,
+            "concept": concept,
+            "exercises": exercises,
+        }
+
 
 generation_service = GenerationService()
 

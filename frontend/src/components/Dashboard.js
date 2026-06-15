@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { tasksAPI } from "../api/client";
+import WelcomeRobot from "./WelcomeRobot";
 import {
   IconTasks,
   IconTemplate,
@@ -42,18 +43,21 @@ export default function Dashboard({ onNavigate, onOpenAI }) {
   return (
     <div className="page-content">
       <div className="dashboard-hero">
-        <div className="hero-left">
-          <h1>Welcome back</h1>
-          <p>Build a template, generate a task, then validate and export.</p>
+        <div className="hero-main">
+          <div className="hero-left">
+            <h1>Welcome back</h1>
+            <p>Build a template, generate tasks — or a full Exercise Series — then validate and export. Press <kbd className="cmd-kbd">Ctrl+K</kbd> for quick navigation.</p>
+          </div>
+          <div className="hero-buttons">
+            <button className="btn-primary" onClick={() => onNavigate("templates")}>
+              Create Template
+            </button>
+            <button className="btn-secondary" onClick={() => onNavigate("history")}>
+              View All Tasks
+            </button>
+          </div>
         </div>
-        <div className="hero-buttons">
-          <button className="btn-primary" onClick={() => onNavigate("templates")}>
-            Create Template
-          </button>
-          <button className="btn-secondary" onClick={() => onNavigate("history")}>
-            View All Tasks
-          </button>
-        </div>
+        <WelcomeRobot onNavigate={onNavigate} />
       </div>
 
       <section className="path-visual">
@@ -105,7 +109,7 @@ export default function Dashboard({ onNavigate, onOpenAI }) {
                 <div className="activity-icon-svg"><IconTasks /></div>
                 <div className="activity-details">
                   <div className="activity-title">{task.title}</div>
-                  <div className="activity-meta">{task.language} Â· {task.difficulty}</div>
+                  <div className="activity-meta">{task.language} · {task.difficulty}</div>
                 </div>
                 <div className="activity-status">
                   {task.is_validated ? (
