@@ -4,7 +4,7 @@ import axios from 'axios';
 const AuthContext = createContext();
 export const useAuth = () => useContext(AuthContext);
 
-const API_BASE_URL = 'http://localhost:8000';
+const API_BASE_URL = process.env.REACT_APP_API_URL || 'https://api.moltenpancake.club';
 
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);

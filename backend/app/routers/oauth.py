@@ -17,7 +17,7 @@ router = APIRouter(prefix="/api/oauth", tags=["OAuth"])
 def google_login():
     params = {
         "client_id": settings.google_client_id,
-        "redirect_uri": "http://localhost:8000/api/oauth/google/callback",
+        "redirect_uri": settings.backend_url + "/api/oauth/google/callback",
         "response_type": "code",
         "scope": "openid email profile",
         "access_type": "offline",
@@ -39,7 +39,7 @@ async def google_callback(code: str, db: Session = Depends(get_db)):
                 "code": code,
                 "client_id": settings.google_client_id,
                 "client_secret": settings.google_client_secret,
-                "redirect_uri": "http://localhost:8000/api/oauth/google/callback",
+                "redirect_uri": settings.backend_url + "/api/oauth/google/callback",
                 "grant_type": "authorization_code",
             },
         )
@@ -81,7 +81,7 @@ async def google_callback(code: str, db: Session = Depends(get_db)):
         jwt_token = create_access_token({"sub": user.email})
 
         return RedirectResponse(
-            f"http://localhost:3000/oauth-success?token={jwt_token}"
+            f"{settings.frontend_url}/oauth-success?token={jwt_token}"
         )
 
 
@@ -91,7 +91,7 @@ async def google_callback(code: str, db: Session = Depends(get_db)):
 def github_login():
     params = {
         "client_id": settings.github_client_id,
-        "redirect_uri": "http://localhost:8000/api/oauth/github/callback",
+        "redirect_uri": settings.backend_url + "/api/oauth/github/callback",
         "scope": "read:user user:email",
         "response_type": "code",
         "prompt": "select_account"
@@ -161,5 +161,5 @@ async def github_callback(code: str, db: Session = Depends(get_db)):
         jwt_token = create_access_token({"sub": user.email})
 
         return RedirectResponse(
-            f"http://localhost:3000/oauth-success?token={jwt_token}"
+            f"{settings.frontend_url}/oauth-success?token={jwt_token}"
         )
