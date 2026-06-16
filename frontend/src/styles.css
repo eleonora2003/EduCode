@@ -1969,7 +1969,6 @@ pre {
   }
 }
 
-<<<<<<< HEAD
 @keyframes typingPulse {
   0%, 100% { opacity: 0.4; transform: translateY(0); }
   50% { opacity: 1; transform: translateY(-2px); }
@@ -2328,12 +2327,6 @@ pre {
   to {
     transform: rotate(360deg);
   }
-=======
-.loading-spinner p {
-  color: #374151;
-  font-size: 16px;
-  font-weight: 500;
->>>>>>> 9b7d905377dd729a51b3dbe6398e70e626b5e3bd
 }
 
 .loading-hint {
@@ -2509,7 +2502,6 @@ pre {
   flex-direction: column;
   align-items: center;
   gap: 16px;
-<<<<<<< HEAD
   position: relative;
   overflow: hidden;
 }
@@ -2526,10 +2518,6 @@ pre {
 
 .template-mode-card:hover::after {
   transform: translateX(120%);
-=======
-  font-family: inherit;
-  color: inherit;
->>>>>>> 9b7d905377dd729a51b3dbe6398e70e626b5e3bd
 }
 
 .template-mode-card:hover {
@@ -2591,7 +2579,6 @@ pre {
   display: flex;
   align-items: center;
   justify-content: center;
-<<<<<<< HEAD
   font-weight: 700;
   color: #475569;
   transition: all 0.35s cubic-bezier(0.34, 1.2, 0.64, 1);
@@ -2610,11 +2597,6 @@ pre {
   border-radius: 50%;
   border: 2px solid rgba(234, 179, 8, 0.45);
   animation: wizardRingPulse 1.8s ease-in-out infinite;
-=======
-  font-weight: 600;
-  color: var(--text-secondary);
-  transition: all 0.25s ease;
->>>>>>> 9b7d905377dd729a51b3dbe6398e70e626b5e3bd
 }
 
 .wizard-step.active .wizard-circle {
@@ -2661,11 +2643,7 @@ pre {
   left: 50%;
   width: 100%;
   height: 2px;
-<<<<<<< HEAD
   background: #e2e8f0;
-=======
-  background: var(--border);
->>>>>>> 9b7d905377dd729a51b3dbe6398e70e626b5e3bd
   z-index: -1;
   overflow: hidden;
 }
@@ -2730,12 +2708,8 @@ pre {
   color: var(--text-secondary);
   font-size: 14px;
   margin-bottom: 24px;
-<<<<<<< HEAD
   animation: wizardSubtitleIn 0.55s ease both;
   animation-delay: 0.06s;
-=======
-  font-weight: 400;
->>>>>>> 9b7d905377dd729a51b3dbe6398e70e626b5e3bd
 }
 
 .language-grid {
