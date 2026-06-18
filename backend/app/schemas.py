@@ -1,4 +1,4 @@
-from pydantic import BaseModel, EmailStr, Field, field_validator
+from pydantic import BaseModel, EmailStr, Field, field_validator, model_validator
 from typing import Optional, List
 from datetime import datetime
 
@@ -87,6 +87,12 @@ class TaskUpdate(BaseModel):
     description: Optional[str] = None
     solution: Optional[str] = None
     tests: Optional[str] = None
+    status: Optional[str] = None
+    is_validated: Optional[bool] = None
+    validation_result: Optional[dict] = None
+    passed_tests: Optional[int] = None
+    total_tests: Optional[int] = None
+    execution_time: Optional[str] = None
 
 
 class TaskResponse(TaskBase):
@@ -106,19 +112,37 @@ class TaskResponse(TaskBase):
 
 
 class TaskGenerateRequest(BaseModel):
-    language: str
-    concept: str
-    difficulty: str
+    language: Optional[str] = None
+    concept: Optional[str] = None
+    difficulty: Optional[str] = None
     template: str = "Default Template"
     template_id: Optional[int] = None
 
     @field_validator('language')
     @classmethod
     def validate_language(cls, v):
+        if v is None:
+            return v
         allowed_languages = ['Python', 'Java']
         if v not in allowed_languages:
-            raise ValueError(f'Language must be one of: {", ".join(allowed_languages)}. The system currently supports only Python and Java.')
+            raise ValueError(f'Language must be one of: {", ".join(allowed_languages)}.')
         return v
+
+    @field_validator('difficulty')
+    @classmethod
+    def validate_difficulty_optional(cls, v):
+        if v is None:
+            return v
+        allowed = ['Basic', 'Intermediate', 'Advanced']
+        if v not in allowed:
+            raise ValueError(f'Difficulty must be one of: {", ".join(allowed)}')
+        return v
+
+    @model_validator(mode='after')
+    def validate_request_mode(self):
+        if self.template_id is None and not all([self.language, self.concept, self.difficulty]):
+            raise ValueError('language, concept, and difficulty are required when template_id is not provided')
+        return self
 
 
 class TaskGenerateResponse(BaseModel):
@@ -127,6 +151,90 @@ class TaskGenerateResponse(BaseModel):
     examples: Optional[str] = None
     solution: Optional[str] = None
     tests: Optional[str] = None
+    language: Optional[str] = None
+    concept: Optional[str] = None
+    difficulty: Optional[str] = None
+
+
+class ExerciseSeriesRequest(BaseModel):
+    language: Optional[str] = None
+    concept: Optional[str] = None
+    template: str = "Default Template"
+    template_id: Optional[int] = None
+    exercise_count: int = Field(default=3, ge=2, le=5)
+
+    @field_validator('language')
+    @classmethod
+    def validate_series_language(cls, v):
+        if v is None:
+            return v
+        allowed_languages = ['Python', 'Java']
+        if v not in allowed_languages:
+            raise ValueError(f'Language must be one of: {", ".join(allowed_languages)}.')
+        return v
+
+    @model_validator(mode='after')
+    def validate_series_request_mode(self):
+        if self.template_id is None and not all([self.language, self.concept]):
+            raise ValueError('language and concept are required when template_id is not provided')
+        return self
+
+
+class ExerciseItem(BaseModel):
+    exercise_number: int
+    title: str
+    description: str
+    examples: Optional[str] = None
+    solution: Optional[str] = None
+    tests: Optional[str] = None
+    difficulty: str
+
+
+class ExerciseSeriesResponse(BaseModel):
+    series_title: str
+    language: str
+    concept: str
+    exercises: List[ExerciseItem]
+
+
+class TaskRefineContext(BaseModel):
+    title: Optional[str] = None
+    language: Optional[str] = "Python"
+    concept: Optional[str] = None
+    difficulty: Optional[str] = None
+    description: Optional[str] = None
+    examples: Optional[str] = None
+    solution: Optional[str] = None
+    tests: Optional[str] = None
+
+
+class TaskRefineRequest(BaseModel):
+    field: str
+    instruction: str = Field(..., min_length=3, max_length=2000)
+    content: str
+    selected_text: Optional[str] = None
+    context: Optional[TaskRefineContext] = None
+
+    @field_validator('field')
+    @classmethod
+    def validate_field(cls, v):
+        allowed = ['description', 'examples', 'solution', 'tests']
+        if v not in allowed:
+            raise ValueError(f'field must be one of: {", ".join(allowed)}')
+        return v
+
+
+class TaskRefineResponse(BaseModel):
+    field: str
+    content: str
+    tests: Optional[str] = None
+
+
+class ValidationFixResponse(BaseModel):
+    solution: str
+    tests: str
+    explanation: Optional[str] = None
+    message: str
 
 
 # ============ Template Schemas ============
@@ -193,5 +301,16 @@ class ChatRequest(BaseModel):
     messages: List[ChatMessage]
 
 
+class TemplateFromChat(BaseModel):
+    name: str = "AI Template"
+    language: str = "Python"
+    concept: str = "General"
+    difficulty: str = "Basic"
+    learning_goals: str = ""
+    restrictions: str = ""
+    code_template: str = "def solution(input_data):\n    pass"
+
+
 class ChatResponse(BaseModel):
     reply: str
+    template: Optional[TemplateFromChat] = None

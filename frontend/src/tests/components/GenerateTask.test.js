@@ -44,6 +44,16 @@ const renderWithRouter = (component) => {
   );
 };
 
+// Helper to wait for animations to complete
+const waitForAnimation = () => new Promise(resolve => setTimeout(resolve, 300));
+
+// Helper to wait for the create button to appear after wizard navigation
+const waitForCreateButton = async () => {
+  await waitFor(() => {
+    expect(screen.queryByRole('button', { name: /create exercise/i })).toBeInTheDocument();
+  }, { timeout: 2000 });
+};
+
 describe('GenerateTask Component', () => {
   const mockSetTask = jest.fn();
   const mockOnNavigate = jest.fn();
@@ -68,84 +78,122 @@ describe('GenerateTask Component', () => {
     mockCreate.mockReset();
   });
 
-  const fillForm = (container, { language, concept, difficulty } = {}) => {
-    const selects = container.querySelectorAll('select');
-    if (language) fireEvent.change(selects[0], { target: { value: language } });
-    if (concept) fireEvent.change(selects[1], { target: { value: concept } });
-    if (difficulty) fireEvent.change(selects[2], { target: { value: difficulty } });
+  // Helper function to navigate through wizard for custom exercise
+  const navigateCustomWizard = async (container, { language = 'Python', concept = 'Loops', difficulty = 'Basic' } = {}) => {
+    // Step 0: Choose "Custom Exercise"
+    await waitFor(() => {
+      const customExerciseCards = container.querySelectorAll('.template-mode-card');
+      expect(customExerciseCards.length).toBeGreaterThanOrEqual(2);
+    });
+    const customExerciseCards = container.querySelectorAll('.template-mode-card');
+    fireEvent.click(customExerciseCards[1]); // Custom Exercise is second card
+    await waitForAnimation();
+
+    // Step 1: Choose "Single Exercise" mode
+    await waitFor(() => {
+      const modeCards = container.querySelectorAll('.generation-mode-card');
+      expect(modeCards.length).toBeGreaterThanOrEqual(2);
+    });
+    const modeCards = container.querySelectorAll('.generation-mode-card');
+    fireEvent.click(modeCards[0]); // Single Exercise is first card
+    await waitForAnimation();
+
+    // Step 2: Choose Language
+    await waitFor(() => {
+      const languageCards = container.querySelectorAll('.language-card');
+      expect(languageCards.length).toBeGreaterThanOrEqual(2);
+    });
+    const languageCards = container.querySelectorAll('.language-card');
+    if (language === 'Python') {
+      fireEvent.click(languageCards[0]);
+    } else if (language === 'Java') {
+      fireEvent.click(languageCards[1]);
+    }
+    await waitForAnimation();
+
+    // Step 3: Choose Concept
+    await waitFor(() => {
+      const conceptCards = container.querySelectorAll('.concept-card');
+      expect(conceptCards.length).toBeGreaterThan(0);
+    });
+    const conceptCards = container.querySelectorAll('.concept-card');
+    const conceptCard = Array.from(conceptCards).find(card => card.textContent.includes(concept));
+    if (conceptCard) {
+      fireEvent.click(conceptCard);
+    }
+    await waitForAnimation();
+
+    // Step 4: Choose Difficulty
+    await waitFor(() => {
+      const difficultyCards = container.querySelectorAll('.difficulty-card');
+      expect(difficultyCards.length).toBeGreaterThanOrEqual(3);
+    });
+    const difficultyCards = container.querySelectorAll('.difficulty-card');
+    const difficultyCard = Array.from(difficultyCards).find(card => card.textContent.includes(difficulty));
+    if (difficultyCard) {
+      fireEvent.click(difficultyCard);
+    }
+    await waitForAnimation();
+
+    // Wait for the final create step to appear
+    await waitForCreateButton();
   };
 
   describe('Form Rendering', () => {
-    it('should render generate task form with all fields', () => {
-      const { container } = renderWithRouter(
+    it('should render generate task form with initial screen', () => {
+      renderWithRouter(
         <GenerateTask task="" setTask={mockSetTask} onNavigate={mockOnNavigate} />
       );
 
-      expect(screen.getByText('Generate Programming Task')).toBeInTheDocument();
-      
-      const labels = container.querySelectorAll('label');
-      const labelTexts = Array.from(labels).map(l => l.textContent);
-      expect(labelTexts).toContain('Programming Language');
-      expect(labelTexts).toContain('Programming Concept');
-      expect(labelTexts).toContain('Difficulty Level');
-      expect(labelTexts).toContain('Custom Template');
-      
-      const selects = container.querySelectorAll('select');
-      expect(selects.length).toBe(4);
-      
-      expect(screen.getByRole('button', { name: /generate complete task/i })).toBeInTheDocument();
+      expect(screen.getByText('How do you want to start?')).toBeInTheDocument();
+      expect(screen.getByText('From Template')).toBeInTheDocument();
+      expect(screen.getByText('Custom Exercise')).toBeInTheDocument();
     });
 
-    it('should have language options', () => {
+    it('should show language selection after navigating wizard', async () => {
       const { container } = renderWithRouter(
         <GenerateTask task="" setTask={mockSetTask} onNavigate={mockOnNavigate} />
       );
 
-      const selects = container.querySelectorAll('select');
-      expect(selects[0].options.length).toBe(3); 
+      // Click Custom Exercise
+      const customExerciseCards = container.querySelectorAll('.template-mode-card');
+      fireEvent.click(customExerciseCards[1]);
+      await waitForAnimation();
+
+      // Click Single Exercise
+      const modeCards = container.querySelectorAll('.generation-mode-card');
+      fireEvent.click(modeCards[0]);
+      await waitForAnimation();
+
+      // Should show language selection
+      expect(screen.getByText('Which programming language?')).toBeInTheDocument();
+      expect(screen.getByText('Python')).toBeInTheDocument();
+      expect(screen.getByText('Java')).toBeInTheDocument();
     });
 
-    it('should have concept options', () => {
+    it('should show concept selection after choosing language', async () => {
       const { container } = renderWithRouter(
         <GenerateTask task="" setTask={mockSetTask} onNavigate={mockOnNavigate} />
       );
 
-      const selects = container.querySelectorAll('select');
-      expect(selects[1].options.length).toBe(11); 
-    });
+      // Navigate to language step
+      const customExerciseCards = container.querySelectorAll('.template-mode-card');
+      fireEvent.click(customExerciseCards[1]);
+      await waitForAnimation();
 
-    it('should have difficulty options', () => {
-      const { container } = renderWithRouter(
-        <GenerateTask task="" setTask={mockSetTask} onNavigate={mockOnNavigate} />
-      );
+      const modeCards = container.querySelectorAll('.generation-mode-card');
+      fireEvent.click(modeCards[0]);
+      await waitForAnimation();
 
-      const selects = container.querySelectorAll('select');
-      expect(selects[2].options.length).toBe(4); 
-    });
-  });
+      // Choose Python
+      const languageCards = container.querySelectorAll('.language-card');
+      fireEvent.click(languageCards[0]);
+      await waitForAnimation();
 
-  describe('Form Validation', () => {
-    it('should enable generate button when all required fields are filled', () => {
-      const { container } = renderWithRouter(
-        <GenerateTask task="" setTask={mockSetTask} onNavigate={mockOnNavigate} />
-      );
-
-      fillForm(container, { language: 'Python', concept: 'Loops', difficulty: 'Basic' });
-
-      expect(screen.getByRole('button', { name: /generate complete task/i })).not.toBeDisabled();
-    });
-  });
-
-  describe('Template Selection', () => {
-    it('should display templates in the dropdown', async () => {
-      const { container } = renderWithRouter(
-        <GenerateTask task="" setTask={mockSetTask} onNavigate={mockOnNavigate} />
-      );
-
-      await waitFor(() => expect(mockGetAll).toHaveBeenCalled());
-
-      const selects = container.querySelectorAll('select');
-      expect(selects.length).toBe(4);
+      // Should show concept selection
+      expect(screen.getByText('What topic should students practice?')).toBeInTheDocument();
+      expect(screen.getByText('Loops')).toBeInTheDocument();
+      expect(screen.getByText('Functions')).toBeInTheDocument();
     });
   });
 
@@ -157,8 +205,12 @@ describe('GenerateTask Component', () => {
         <GenerateTask task="" setTask={mockSetTask} onNavigate={mockOnNavigate} />
       );
 
-      fillForm(container, { language: 'Python', concept: 'Loops', difficulty: 'Basic' });
-      fireEvent.click(screen.getByRole('button', { name: /generate complete task/i }));
+      await navigateCustomWizard(container, { language: 'Python', concept: 'Loops', difficulty: 'Basic' });
+
+      // Click Create Exercise button
+      const createButton = screen.getByRole('button', { name: /create exercise/i });
+      expect(createButton).toBeInTheDocument();
+      fireEvent.click(createButton);
 
       await waitFor(() => {
         expect(mockGenerate).toHaveBeenCalledWith(expect.objectContaining({
@@ -176,8 +228,8 @@ describe('GenerateTask Component', () => {
         <GenerateTask task="" setTask={mockSetTask} onNavigate={mockOnNavigate} />
       );
 
-      fillForm(container, { language: 'Python', concept: 'Loops', difficulty: 'Basic' });
-      fireEvent.click(screen.getByRole('button', { name: /generate complete task/i }));
+      await navigateCustomWizard(container, { language: 'Python', concept: 'Loops', difficulty: 'Basic' });
+      fireEvent.click(screen.getByRole('button', { name: /create exercise/i }));
 
       await waitFor(() => {
         expect(screen.getByText('Test Task Title')).toBeInTheDocument();
@@ -194,78 +246,16 @@ describe('GenerateTask Component', () => {
         <GenerateTask task="" setTask={mockSetTask} onNavigate={mockOnNavigate} />
       );
 
-      fillForm(container, { language: 'Python', concept: 'Loops', difficulty: 'Basic' });
-      fireEvent.click(screen.getByRole('button', { name: /generate complete task/i }));
+      await navigateCustomWizard(container, { language: 'Python', concept: 'Loops', difficulty: 'Basic' });
+      fireEvent.click(screen.getByRole('button', { name: /create exercise/i }));
 
       await waitFor(() => {
-        expect(screen.getByRole('button', { name: /generating with ai/i })).toBeInTheDocument();
-      });
-
-      resolveGenerate({ data: mockGeneratedTask });
-    });
-  });
-
-  describe('Tab Switching', () => {
-    it('should show description tab content after generation', async () => {
-      mockGenerate.mockResolvedValueOnce({ data: mockGeneratedTask });
-
-      const { container } = renderWithRouter(
-        <GenerateTask task="" setTask={mockSetTask} onNavigate={mockOnNavigate} />
-      );
-
-      fillForm(container, { language: 'Python', concept: 'Loops', difficulty: 'Basic' });
-      fireEvent.click(screen.getByRole('button', { name: /generate complete task/i }));
-
-      await waitFor(() => {
-        expect(screen.getByText('Test Task Title')).toBeInTheDocument();
-      });
-
-      expect(screen.getByText('📝 Task Description')).toBeInTheDocument();
-      expect(screen.getByText('This is a test task description.')).toBeInTheDocument();
-    });
-
-    it('should switch to solution tab when clicked', async () => {
-      mockGenerate.mockResolvedValueOnce({ data: mockGeneratedTask });
-
-      const { container } = renderWithRouter(
-        <GenerateTask task="" setTask={mockSetTask} onNavigate={mockOnNavigate} />
-      );
-
-      fillForm(container, { language: 'Python', concept: 'Loops', difficulty: 'Basic' });
-      fireEvent.click(screen.getByRole('button', { name: /generate complete task/i }));
-
-      await waitFor(() => {
-        expect(screen.getByText('Test Task Title')).toBeInTheDocument();
-      });
-
-      fireEvent.click(screen.getByText('💡 Reference Solution'));
-      
-      await waitFor(() => {
-        expect(screen.getByText(/def solution/i)).toBeInTheDocument();
-      });
-    });
-
-    it('should switch to tests tab when clicked', async () => {
-      mockGenerate.mockResolvedValueOnce({ data: mockGeneratedTask });
-
-      const { container } = renderWithRouter(
-        <GenerateTask task="" setTask={mockSetTask} onNavigate={mockOnNavigate} />
-      );
-
-      fillForm(container, { language: 'Python', concept: 'Loops', difficulty: 'Basic' });
-      fireEvent.click(screen.getByRole('button', { name: /generate complete task/i }));
-
-      await waitFor(() => {
-        expect(screen.getByText('Test Task Title')).toBeInTheDocument();
-      });
-
-      fireEvent.click(screen.getByText('🧪 Unit Tests'));
-      
-      await waitFor(() => {
-        expect(screen.getByText(/def test_solution/i)).toBeInTheDocument();
+        const loadingOverlays = container.querySelectorAll('.loading-overlay');
+        expect(loadingOverlays.length).toBeGreaterThan(0);
       });
     });
   });
+
 
   describe('Copy to Clipboard', () => {
     it('should copy solution to clipboard when clicked', async () => {
@@ -275,14 +265,14 @@ describe('GenerateTask Component', () => {
         <GenerateTask task="" setTask={mockSetTask} onNavigate={mockOnNavigate} />
       );
 
-      fillForm(container, { language: 'Python', concept: 'Loops', difficulty: 'Basic' });
-      fireEvent.click(screen.getByRole('button', { name: /generate complete task/i }));
+      await navigateCustomWizard(container, { language: 'Python', concept: 'Loops', difficulty: 'Basic' });
+      fireEvent.click(screen.getByRole('button', { name: /create exercise/i }));
 
       await waitFor(() => {
         expect(screen.getByText('Test Task Title')).toBeInTheDocument();
       });
 
-      fireEvent.click(screen.getByText('💡 Reference Solution'));
+      fireEvent.click(screen.getByText('Reference Solution'));
       fireEvent.click(screen.getByRole('button', { name: /copy code/i }));
 
       await waitFor(() => {
@@ -297,14 +287,14 @@ describe('GenerateTask Component', () => {
         <GenerateTask task="" setTask={mockSetTask} onNavigate={mockOnNavigate} />
       );
 
-      fillForm(container, { language: 'Python', concept: 'Loops', difficulty: 'Basic' });
-      fireEvent.click(screen.getByRole('button', { name: /generate complete task/i }));
+      await navigateCustomWizard(container, { language: 'Python', concept: 'Loops', difficulty: 'Basic' });
+      fireEvent.click(screen.getByRole('button', { name: /create exercise/i }));
 
       await waitFor(() => {
         expect(screen.getByText('Test Task Title')).toBeInTheDocument();
       });
 
-      fireEvent.click(screen.getByText('🧪 Unit Tests'));
+      fireEvent.click(screen.getByText('Unit Tests'));
       fireEvent.click(screen.getByRole('button', { name: /copy tests/i }));
 
       await waitFor(() => {
@@ -322,8 +312,8 @@ describe('GenerateTask Component', () => {
         <GenerateTask task="" setTask={mockSetTask} onNavigate={mockOnNavigate} />
       );
 
-      fillForm(container, { language: 'Python', concept: 'Loops', difficulty: 'Basic' });
-      fireEvent.click(screen.getByRole('button', { name: /generate complete task/i }));
+      await navigateCustomWizard(container, { language: 'Python', concept: 'Loops', difficulty: 'Basic' });
+      fireEvent.click(screen.getByRole('button', { name: /create exercise/i }));
 
       await waitFor(() => {
         expect(screen.getByText('Test Task Title')).toBeInTheDocument();
@@ -344,8 +334,8 @@ describe('GenerateTask Component', () => {
         <GenerateTask task="" setTask={mockSetTask} onNavigate={mockOnNavigate} />
       );
 
-      fillForm(container, { language: 'Python', concept: 'Loops', difficulty: 'Basic' });
-      fireEvent.click(screen.getByRole('button', { name: /generate complete task/i }));
+      await navigateCustomWizard(container, { language: 'Python', concept: 'Loops', difficulty: 'Basic' });
+      fireEvent.click(screen.getByRole('button', { name: /create exercise/i }));
 
       await waitFor(() => {
         expect(screen.getByText('Test Task Title')).toBeInTheDocument();
@@ -377,8 +367,8 @@ describe('GenerateTask Component', () => {
         <GenerateTask task="" setTask={mockSetTask} onNavigate={mockOnNavigate} />
       );
 
-      fillForm(container, { language: 'Python', concept: 'Loops', difficulty: 'Basic' });
-      fireEvent.click(screen.getByRole('button', { name: /generate complete task/i }));
+      await navigateCustomWizard(container, { language: 'Python', concept: 'Loops', difficulty: 'Basic' });
+      fireEvent.click(screen.getByRole('button', { name: /create exercise/i }));
 
       await waitFor(() => {
         expect(screen.getByText('Test Task Title')).toBeInTheDocument();
@@ -402,26 +392,48 @@ describe('GenerateTask Component', () => {
         <GenerateTask task="" setTask={mockSetTask} onNavigate={mockOnNavigate} />
       );
 
-      fillForm(container, { language: 'Python', concept: 'Loops', difficulty: 'Basic' });
-      fireEvent.click(screen.getByRole('button', { name: /generate complete task/i }));
+      await navigateCustomWizard(container, { language: 'Python', concept: 'Loops', difficulty: 'Basic' });
+      fireEvent.click(screen.getByRole('button', { name: /create exercise/i }));
 
       await waitFor(() => {
-        expect(screen.getByText(/🐍 Python/i)).toBeInTheDocument();
+        expect(screen.getByText(/Python/i)).toBeInTheDocument();
       });
     });
 
-    it('should display language icon for Java', async () => {
+    it('should display language for Java', async () => {
       mockGenerate.mockResolvedValueOnce({ data: mockGeneratedTask });
 
       const { container } = renderWithRouter(
         <GenerateTask task="" setTask={mockSetTask} onNavigate={mockOnNavigate} />
       );
 
-      fillForm(container, { language: 'Java', concept: 'Functions', difficulty: 'Intermediate' });
-      fireEvent.click(screen.getByRole('button', { name: /generate complete task/i }));
+      await navigateCustomWizard(container, { language: 'Java', concept: 'Functions', difficulty: 'Intermediate' });
+      fireEvent.click(screen.getByRole('button', { name: /create exercise/i }));
 
       await waitFor(() => {
-        expect(screen.getByText(/☕ Java/i)).toBeInTheDocument();
+        expect(screen.getByText(/Java/i)).toBeInTheDocument();
+      });
+    });
+  });
+
+  describe('Template Mode', () => {
+    it('should show templates when choosing From Template', async () => {
+      const { container } = renderWithRouter(
+        <GenerateTask task="" setTask={mockSetTask} onNavigate={mockOnNavigate} />
+      );
+
+      await waitFor(() => expect(mockGetAll).toHaveBeenCalled());
+
+      // Click "From Template"
+      const templateModeCards = container.querySelectorAll('.template-mode-card');
+      fireEvent.click(templateModeCards[0]);
+      await waitForAnimation();
+
+      // Should show templates
+      await waitFor(() => {
+        expect(screen.getByText('Pick a template')).toBeInTheDocument();
+        expect(screen.getByText('Template 1')).toBeInTheDocument();
+        expect(screen.getByText('Template 2')).toBeInTheDocument();
       });
     });
   });

@@ -1,40 +1,40 @@
-import { createContext, useContext, useState, useEffect, useCallback } from 'react';
+import { createContext, useContext, useState, useEffect } from 'react';
 import axios from 'axios';
 
 const AuthContext = createContext();
-
 export const useAuth = () => useContext(AuthContext);
 
-const API_BASE_URL = 'http://localhost:8000';
+const API_BASE_URL = process.env.REACT_APP_API_URL || 'https://api.moltenpancake.club';
 
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [token, setToken] = useState(localStorage.getItem('token'));
   const [loading, setLoading] = useState(true);
+  const [loadingUser, setLoadingUser] = useState(false);
 
-  const fetchUserInfo = useCallback(async (authToken) => {
+  const loadUserFromToken = async (tokenToUse) => {
+    setLoadingUser(true);
     try {
-      const headers = authToken ? { Authorization: `Bearer ${authToken}` } : {};
-      const response = await axios.get(`${API_BASE_URL}/api/auth/me`, { headers });
-      setUser(response.data);
-    } catch (error) {
-      console.error('Failed to fetch user info:', error);
-      localStorage.removeItem('token');
+      const res = await axios.get(`${API_BASE_URL}/api/auth/me`, {
+        headers: { Authorization: `Bearer ${tokenToUse}` }
+      });
+
+      setUser(res.data);
+    } catch (err) {
+      localStorage.removeItem("token");
       setToken(null);
       setUser(null);
+    } finally {
+      setLoadingUser(false);
     }
-  }, []);
+  };
 
   useEffect(() => {
     if (token) {
       axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
-      if (!user) {
-        fetchUserInfo();
-      }
-    } else {
-      delete axios.defaults.headers.common['Authorization'];
+      loadUserFromToken(token);
     }
-  }, [token, user, fetchUserInfo]);
+  }, [token]);
 
   const login = async (email, password) => {
     const response = await axios.post(`${API_BASE_URL}/api/auth/login/json`, {
@@ -42,14 +42,12 @@ export const AuthProvider = ({ children }) => {
       password
     });
     const { access_token } = response.data;
-    
+
     localStorage.setItem('token', access_token);
     setToken(access_token);
-    
-    axios.defaults.headers.common['Authorization'] = `Bearer ${access_token}`;
-    
-    await fetchUserInfo(access_token);
-    
+
+    await loadUserFromToken(access_token);
+
     return response.data;
   };
 
@@ -74,6 +72,7 @@ export const AuthProvider = ({ children }) => {
       const storedToken = localStorage.getItem('token');
       if (storedToken) {
         setToken(storedToken);
+        await loadUserFromToken(storedToken);
       }
       setLoading(false);
     };
@@ -81,13 +80,14 @@ export const AuthProvider = ({ children }) => {
   }, []);
 
   return (
-    <AuthContext.Provider value={{ 
-      user, 
-      token, 
-      login, 
-      register, 
-      logout, 
-      isAuthenticated: !!token 
+    <AuthContext.Provider value={{
+      user,
+      token,
+      setToken,
+      login,
+      register,
+      logout,
+      isAuthenticated: !!token
     }}>
       {!loading && children}
     </AuthContext.Provider>

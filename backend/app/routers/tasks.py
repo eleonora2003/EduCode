@@ -1,3 +1,4 @@
+import re
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from typing import List, Optional
 from sqlalchemy.orm import Session
@@ -7,13 +8,28 @@ from ..models import User, Template
 from ..schemas import (
     TaskCreate, TaskResponse, TaskUpdate,
     TaskGenerateRequest, TaskGenerateResponse,
-    TaskStatistics
+    TaskRefineRequest, TaskRefineResponse,
+    TaskStatistics,
+    ExerciseSeriesRequest, ExerciseSeriesResponse, ExerciseItem,
 )
 from ..auth import get_current_user
 from ..services.task_service import TaskService
 from ..services.generation_service import generation_service
 
 router = APIRouter(prefix="/api/tasks", tags=["Tasks"])
+
+
+def extract_language_from_description(description: str) -> str:
+    if not description:
+        return "Python"
+    match = re.search(r"Language:\s*(\w+)", description, re.IGNORECASE)
+    if match:
+        lang = match.group(1).strip().lower()
+        if lang == "python":
+            return "Python"
+        if lang == "java":
+            return "Java"
+    return "Python"
 
 
 @router.post("/generate", response_model=TaskGenerateResponse)
@@ -23,8 +39,10 @@ def generate_task(
     db: Session = Depends(get_db)
 ):
     selected_template = None
-
-    template_name = getattr(request, "template", None) or "Default Template"
+    template_name = request.template or "Default Template"
+    language = request.language
+    concept = request.concept
+    difficulty = request.difficulty
 
     if request.template_id:
         selected_template = db.query(Template).filter(
@@ -38,21 +56,120 @@ def generate_task(
                 detail="Template not found"
             )
 
-        template_name = f"""
-{selected_template.name}
+        language = language or extract_language_from_description(selected_template.description)
+        concept = concept or selected_template.concept or "General"
+        difficulty = difficulty or selected_template.difficulty or "Basic"
+
+        template_name = f"""{selected_template.name}
 
 Use this custom template:
 {selected_template.description}
 """
 
+    if not all([language, concept, difficulty]):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Missing language, concept, or difficulty for generation",
+        )
+
     result = generation_service.generate_task(
-        language=request.language,
-        concept=request.concept,
-        difficulty=request.difficulty,
+        language=language,
+        concept=concept,
+        difficulty=difficulty,
         template_name=template_name
     )
 
-    return TaskGenerateResponse(**result)
+    return TaskGenerateResponse(
+        title=result["title"],
+        description=result["description"],
+        examples=result.get("examples"),
+        solution=result.get("solution"),
+        tests=result.get("tests"),
+        language=language,
+        concept=concept,
+        difficulty=difficulty,
+    )
+
+
+@router.post("/generate-series", response_model=ExerciseSeriesResponse)
+def generate_exercise_series(
+    request: ExerciseSeriesRequest,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    """Generate a progressive exercise series (Exercise 1, 2, 3…)."""
+    selected_template = None
+    template_name = request.template or "Default Template"
+    language = request.language
+    concept = request.concept
+
+    if request.template_id:
+        selected_template = db.query(Template).filter(
+            Template.template_id == request.template_id,
+            Template.user_id == current_user.id,
+        ).first()
+
+        if not selected_template:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Template not found",
+            )
+
+        language = language or extract_language_from_description(selected_template.description)
+        concept = concept or selected_template.concept or "General"
+        template_name = f"""{selected_template.name}
+
+Use this custom template:
+{selected_template.description}
+"""
+
+    if not all([language, concept]):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Missing language or concept for series generation",
+        )
+
+    result = generation_service.generate_exercise_series(
+        language=language,
+        concept=concept,
+        template_name=template_name,
+        exercise_count=request.exercise_count,
+    )
+
+    return ExerciseSeriesResponse(
+        series_title=result["series_title"],
+        language=result["language"],
+        concept=result["concept"],
+        exercises=[ExerciseItem(**ex) for ex in result["exercises"]],
+    )
+
+
+@router.post("/refine", response_model=TaskRefineResponse)
+def refine_task_section(
+    request: TaskRefineRequest,
+    current_user: User = Depends(get_current_user),
+):
+    context = request.context.model_dump() if request.context else {}
+
+    result = generation_service.refine_section(
+        field=request.field,
+        instruction=request.instruction,
+        content=request.content,
+        selected_text=request.selected_text,
+        context=context,
+    )
+
+    if result.get("error"):
+        raise HTTPException(
+            status_code=status.HTTP_502_BAD_GATEWAY,
+            detail=f"Failed to refine section: {result['error']}",
+        )
+
+    return TaskRefineResponse(
+        field=result["field"],
+        content=result["content"],
+        tests=result.get("tests"),
+    )
 
 
 @router.post("", response_model=TaskResponse, status_code=status.HTTP_201_CREATED)

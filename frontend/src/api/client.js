@@ -1,7 +1,7 @@
 import axios from "axios";
 
 const API = axios.create({
-  baseURL: "http://localhost:8000/",
+  baseURL: process.env.REACT_APP_API_URL || "https://api.moltenpancake.club/",
   headers: {
     "Content-Type": "application/json",
   },
@@ -43,6 +43,8 @@ export const authAPI = {
 
 export const tasksAPI = {
   generate: (data) => API.post("/api/tasks/generate", data),
+  generateSeries: (data) => API.post("/api/tasks/generate-series", data),
+  refine: (data) => API.post("/api/tasks/refine", data),
   create: (data) => API.post("/api/tasks", data),
   getAll: (params) => API.get("/api/tasks", { params }),
   getById: (id) => API.get(`/api/tasks/${id}`),
@@ -52,10 +54,10 @@ export const tasksAPI = {
 };
 
 export const validationAPI = {
-  execute: (data) => API.post("/api/validation/execute", data),
-  validateSolution: (taskId) => API.post(`/api/validation/validate-solution?task_id=${taskId}`),
-  getLogs: (taskId) => API.get(`/api/validation/${taskId}/logs`),
-  getOverview: () => API.get("/api/validation/statistics/overview"),
+  validateSolution: (taskId, force = true) =>
+    API.post(`/api/validation/validate-solution?task_id=${taskId}&force=${force}`),
+  fixWithAI: (taskId) =>
+    API.post(`/api/validation/fix-with-ai?task_id=${taskId}`),
 };
 
 export const templatesAPI = {
