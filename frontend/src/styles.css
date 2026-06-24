@@ -5489,3 +5489,144 @@ pre {
     gap: 12px;
   }
 }
+
+.validation-layout {
+  display: grid;
+  grid-template-columns: minmax(320px, 1.1fr) minmax(360px, 1.4fr);
+  gap: 20px;
+  align-items: start;
+}
+
+.validation-task-list {
+  margin-bottom: 0;
+}
+
+.validation-row-selected {
+  background: var(--accent-soft);
+}
+
+.validation-detail-panel {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 18px;
+  padding: 24px;
+  min-height: 420px;
+  color: var(--text-secondary);
+}
+
+.validation-empty-panel {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  min-height: 320px;
+  color: var(--text-muted);
+}
+
+.validation-detail-header {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  align-items: flex-start;
+  margin-bottom: 16px;
+}
+
+.validation-detail-header h3 {
+  color: var(--text);
+  margin-bottom: 8px;
+}
+
+.validation-detail-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  align-items: center;
+  color: var(--text-muted);
+  font-size: 13px;
+}
+
+.validation-detail-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.validation-status-banner {
+  background: var(--surface-muted);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 12px 14px;
+  margin-bottom: 16px;
+  color: var(--text-secondary);
+  font-size: 14px;
+}
+
+.validation-results-grid {
+  display: grid;
+  gap: 14px;
+  margin-bottom: 16px;
+}
+
+.validation-result-card {
+  background: var(--surface-muted);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 16px;
+}
+
+.validation-result-passed {
+  border-color: rgba(34, 197, 94, 0.35);
+  background: rgba(34, 197, 94, 0.1);
+}
+
+.validation-result-failed {
+  border-color: rgba(239, 68, 68, 0.35);
+  background: rgba(239, 68, 68, 0.1);
+}
+
+.validation-result-label {
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--text-muted);
+  margin-bottom: 8px;
+}
+
+.validation-result-value {
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--text);
+}
+
+.validation-result-sub {
+  margin-top: 6px;
+  color: var(--text-muted);
+  font-size: 13px;
+}
+
+.validation-failure-reason {
+  background: transparent;
+  color: #b91c1c;
+  padding: 0;
+  margin: 0;
+  white-space: pre-wrap;
+  font-size: 13px;
+  line-height: 1.5;
+  max-height: none;
+}
+
+.validation-logs-card {
+  padding: 0;
+  border: none;
+  background: transparent;
+}
+
+.validation-logs-card h3 {
+  margin-bottom: 12px;
+  color: var(--text);
+}
+
+@media (max-width: 960px) {
+  .validation-layout {
+    grid-template-columns: 1fr;
+  }
+}
