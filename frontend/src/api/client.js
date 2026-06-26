@@ -68,15 +68,24 @@ export const templatesAPI = {
 };
 
 export const exportAPI = {
-  exportTasks: (data) => API.post("/api/export", data, {
-    responseType: data.format === "pdf" ? "blob" : "text",
-  }),
-  exportTaskMarkdown: (id) => API.get(`/api/export/${id}/markdown`, {
-    responseType: "text",
-  }),
-  exportTaskPdf: (id) => API.get(`/api/export/${id}/pdf`, {
-    responseType: "blob",
-  }),
+  exportTasks: (data) =>
+    API.post("/api/export", data, {
+      responseType:
+        data.format === "pdf" ||
+        data.format === "docx"
+          ? "blob"
+          : "text",
+    }),
+
+  exportTaskMarkdown: (id) =>
+    API.get(`/api/export/${id}/markdown`, {
+      responseType: "text",
+    }),
+
+  exportTaskPdf: (id) =>
+    API.get(`/api/export/${id}/pdf`, {
+      responseType: "blob",
+    }),
 };
 
 export const chatAPI = {

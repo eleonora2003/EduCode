@@ -50,19 +50,29 @@ export default function Export({ onNavigate }) {
         task_ids: selectedTasks,
         format: exportFormat
       });
+      const mimeType =
+        exportFormat === "pdf"
+          ? "application/pdf"
+          : exportFormat === "docx"
+          ? "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+          : exportFormat === "moodle_xml"
+          ? "application/xml"
+          : "text/markdown";
 
-      const blob = new Blob([response.data], { 
-        type: exportFormat === "pdf" ? "application/pdf" : 
-               exportFormat === "moodle_xml" ? "application/xml" : 
-               "text/markdown" 
+      const blob = new Blob([response.data], {
+        type: mimeType,
       });
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
       a.download = `edocode_tasks_${new Date().toISOString().slice(0,10)}.${
-        exportFormat === "pdf" ? "pdf" : 
-        exportFormat === "moodle_xml" ? "xml" : 
-        "md"
+        exportFormat === "pdf"
+          ? "pdf"
+          : exportFormat === "docx"
+          ? "docx"
+          : exportFormat === "moodle_xml"
+          ? "xml"
+          : "md"
       }`;
       a.click();
       URL.revokeObjectURL(url);
@@ -107,6 +117,7 @@ export default function Export({ onNavigate }) {
               <option value="markdown">Markdown (.md)</option>
               <option value="pdf">PDF Document (.pdf)</option>
               <option value="moodle_xml">Moodle XML (.xml)</option>
+              <option value="docx">Word Document (.docx)</option>
             </select>
           </div>
           <div className="form-group">
@@ -235,6 +246,19 @@ export default function Export({ onNavigate }) {
               <li>Use in Moodle quizzes</li>
               <li>Share with Moodle courses</li>
               <li>Includes solution as feedback</li>
+            </ul>
+          </div>
+        )}
+        {exportFormat === "docx" && (
+          <div style={{ lineHeight: '1.6', color: '#374151' }}>
+            <p><strong>Word Document (.docx)</strong> - Professional editable document format:</p>
+            <ul style={{ marginLeft: '20px', marginTop: '8px' }}>
+              <li>Fully editable in Microsoft Word</li>
+              <li>Professional title page included</li>
+              <li>Automatic page numbering</li>
+              <li>Ideal for reports and assignments</li>
+              <li>Preserves code formatting and structure</li>
+              <li>Easy to share and print</li>
             </ul>
           </div>
         )}

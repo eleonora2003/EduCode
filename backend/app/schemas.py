@@ -214,7 +214,7 @@ class ExportRequest(BaseModel):
     @field_validator('format')
     @classmethod
     def validate_format(cls, v):
-        allowed_formats = ['pdf', 'markdown', 'moodle_xml']
+        allowed_formats = ['pdf', 'markdown', 'moodle_xml', 'docx']
         if v not in allowed_formats:
             raise ValueError(f'Format must be one of: {", ".join(allowed_formats)}')
         return v
