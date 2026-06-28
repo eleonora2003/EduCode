@@ -30,6 +30,16 @@ export default function Export({ onNavigate }) {
     );
   };
 
+  const getDifficultyBadge = (difficulty) => {
+    const badges = {
+      Basic: "badge-basic",
+      Intermediate: "badge-medium",
+      Advanced: "badge-advanced",
+    };
+
+    return badges[difficulty] || "badge-basic";
+  };
+
   const selectAll = () => {
     if (selectedTasks.length === tasks.length) {
       setSelectedTasks([]);
@@ -194,7 +204,7 @@ export default function Export({ onNavigate }) {
                     <td>{task.language}</td>
                     <td>{task.concept}</td>
                     <td>
-                      <span className={`badge badge-${task.difficulty.toLowerCase()}`}>
+                      <span className={`badge ${getDifficultyBadge(task.difficulty)}`}>
                         {task.difficulty}
                       </span>
                     </td>
