@@ -28,11 +28,12 @@ class ExportService:
         output.append("# Programming Tasks Export\n")
         output.append(f"**Exported:** {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
         output.append(f"**Total Tasks:** {len(tasks)}\n")
+        output.append(f"Total tasks: {len(tasks)}\n")
         output.append("---\n")
 
         for i, task in enumerate(tasks, 1):
 
-            output.append(f"\n## {i}. {task.title}\n")
+            output.append(f"\n## Task {i}: {task.title}\n")
 
             output.append(f"**Language:** {task.language}")
             output.append(f"**Concept:** {task.concept}")
@@ -43,7 +44,7 @@ class ExportService:
 
             output.append("\n---\n")
 
-            output.append("### Task Description\n")
+            output.append("### Description\n")
             output.append(f"{task.description}\n")
 
             if task.examples and task.examples.strip():
@@ -424,13 +425,12 @@ class ExportService:
             if task.solution:
                 generalfeedback = ET.SubElement(
                     question,
-                    "generalfeedback",
-                    {"format": "html"}
+                    "generalfeedback"
                 )
 
                 fb_text = ET.SubElement(generalfeedback, "text")
                 fb_text.text = f"""
-    <h4>Reference Solution</h4>
+    <h4>Reference Solution:</h4>
     <pre>{escape(task.solution)}</pre>
     """
 
@@ -441,9 +441,9 @@ class ExportService:
         )
 
         header = f"""<?xml version="1.0" encoding="UTF-8"?>
-    <!-- EduCode Moodle XML Export -->
+    <!-- Moodle XML Export from EduCode -->
     <!-- Generated: {datetime.now().strftime("%Y-%m-%d %H:%M:%S")} -->
-    <!-- Total Tasks: {len(tasks)} -->
+    <!-- Total tasks: {len(tasks)} -->
     """
 
         return header + xml_str
