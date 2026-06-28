@@ -67,10 +67,27 @@ services:
       - backend
     networks:
       - edocode_network
+  pgadmin:
+    image: dpage/pgadmin4:latest
+    container_name: edocode_pgadmin
+    environment:
+      PGADMIN_DEFAULT_EMAIL: ${PGADMIN_DEFAULT_EMAIL:-admin@example.com}
+      PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_DEFAULT_PASSWORD:-changeme}
+    volumes:
+      - pgadmin_data:/var/lib/pgadmin
+    ports:
+      - "58271:80"
+    depends_on:
+      - postgres
+    networks:
+      - edocode_network
+    restart: unless-stopped
  
 volumes:
   postgres_data:
     driver: local
+  pgadmin_data:
+    driver: local 
  
 networks:
   edocode_network:
