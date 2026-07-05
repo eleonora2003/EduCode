@@ -2,6 +2,9 @@ import { useState, useEffect } from "react";
 import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
 import "./styles.css";
 import { AuthProvider, useAuth } from "./context/AuthContext";
+import { CookieConsentProvider } from "./context/CookieConsentContext";
+import CookieConsentBanner from "./components/CookieConsentBanner";
+import CookiePreferencesModal from "./components/CookiePreferencesModal";
 import PrivateRoute from "./utils/PrivateRoute";
 import Login from "./components/Auth/Login";
 import Register from "./components/Auth/Register";
@@ -112,12 +115,9 @@ function MainLayout() {
     localStorage.setItem("theme", theme);
   }, [theme]);
 
+  // Show onboarding modal on every login (not just first visit)
   useEffect(() => {
-    const hasSeenOnboarding = localStorage.getItem("hasSeenOnboarding");
-    if (!hasSeenOnboarding) {
-      setShowOnboarding(true);
-      localStorage.setItem("hasSeenOnboarding", "true");
-    }
+    setShowOnboarding(true);
 
     const path = window.location.pathname;
     const pageMap = {
@@ -286,26 +286,31 @@ function MainLayout() {
 
 function App() {
   return (
-    <AuthProvider>
-      <Router>
-        <Routes>
-          <Route path="/login" element={<Login />} />
-          <Route path="/register" element={<Register />} />
-          <Route path="/oauth-success" element={<OAuthSuccess />} />
+    <CookieConsentProvider>
+      <AuthProvider>
+        <Router>
+          <Routes>
+            <Route path="/login" element={<Login />} />
+            <Route path="/register" element={<Register />} />
+            <Route path="/oauth-success" element={<OAuthSuccess />} />
 
-          <Route element={<PrivateRoute />}>
-            <Route path="/" element={<MainLayout />} />
-            <Route path="/generate" element={<MainLayout />} />
-            <Route path="/templates" element={<MainLayout />} />
-            <Route path="/validation" element={<MainLayout />} />
-            <Route path="/export" element={<MainLayout />} />
-            <Route path="/history" element={<MainLayout />} />
-          </Route>
+            <Route element={<PrivateRoute />}>
+              <Route path="/" element={<MainLayout />} />
+              <Route path="/generate" element={<MainLayout />} />
+              <Route path="/templates" element={<MainLayout />} />
+              <Route path="/validation" element={<MainLayout />} />
+              <Route path="/export" element={<MainLayout />} />
+              <Route path="/history" element={<MainLayout />} />
+            </Route>
 
-          <Route path="*" element={<Navigate to="/" />} />
-        </Routes>
-      </Router>
-    </AuthProvider>
+            <Route path="*" element={<Navigate to="/" />} />
+          </Routes>
+        </Router>
+        {/* Cookie Consent Components - rendered outside routes for global access */}
+        <CookieConsentBanner />
+        <CookiePreferencesModal />
+      </AuthProvider>
+    </CookieConsentProvider>
   );
 }
 

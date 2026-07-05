@@ -6,6 +6,7 @@ import {
   IconLogout,
   IconClose,
 } from "./icons";
+import { useCookieConsent } from "../context/CookieConsentContext";
 
 function splitName(fullName) {
   if (!fullName) return { firstName: "—", lastName: "—" };
@@ -151,38 +152,69 @@ export default function UserMenu({
       )}
 
       {overlay === "preferences" && (
-        <div className="profile-overlay" onClick={() => setOverlay(null)}>
-          <div className="profile-panel" onClick={(e) => e.stopPropagation()} role="dialog">
-            <div className="profile-panel-header">
-              <h2>Preferences</h2>
-              <button type="button" className="profile-close" onClick={() => setOverlay(null)} aria-label="Close">
-                <IconClose />
-              </button>
-            </div>
-            <div className="pref-section">
-              <span className="pref-label">Theme</span>
-              <div className="theme-picker">
-                <button
-                  type="button"
-                  className={`theme-option ${theme === "light" ? "active" : ""}`}
-                  onClick={() => onThemeChange("light")}
-                >
-                  <span className="theme-swatch light" />
-                  Light
-                </button>
-                <button
-                  type="button"
-                  className={`theme-option ${theme === "dark" ? "active" : ""}`}
-                  onClick={() => onThemeChange("dark")}
-                >
-                  <span className="theme-swatch dark" />
-                  Dark
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
+        <PreferencesPanel
+          theme={theme}
+          onThemeChange={onThemeChange}
+          onClose={() => setOverlay(null)}
+        />
       )}
     </>
+  );
+}
+
+function PreferencesPanel({ theme, onThemeChange, onClose }) {
+  const { openPreferencesModal } = useCookieConsent();
+
+  return (
+    <div className="profile-overlay" onClick={onClose}>
+      <div className="profile-panel" onClick={(e) => e.stopPropagation()} role="dialog">
+        <div className="profile-panel-header">
+          <h2>Preferences</h2>
+          <button type="button" className="profile-close" onClick={onClose} aria-label="Close">
+            <IconClose />
+          </button>
+        </div>
+        <div className="pref-section">
+          <span className="pref-label">Theme</span>
+          <div className="theme-picker">
+            <button
+              type="button"
+              className={`theme-option ${theme === "light" ? "active" : ""}`}
+              onClick={() => onThemeChange("light")}
+            >
+              <span className="theme-swatch light" />
+              Light
+            </button>
+            <button
+              type="button"
+              className={`theme-option ${theme === "dark" ? "active" : ""}`}
+              onClick={() => onThemeChange("dark")}
+            >
+              <span className="theme-swatch dark" />
+              Dark
+            </button>
+          </div>
+        </div>
+        <div className="pref-section">
+          <span className="pref-label">Privacy</span>
+          <button
+            type="button"
+            className="btn-cookie-prefs"
+            onClick={() => {
+              onClose();
+              openPreferencesModal();
+            }}
+          >
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2Z" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+              <path d="M8 14s1.5 2 4 2 4-2 4-2" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+              <circle cx="9" cy="9" r="1.5" fill="currentColor"/>
+              <circle cx="15" cy="9" r="1.5" fill="currentColor"/>
+            </svg>
+            Cookie Preferences
+          </button>
+        </div>
+      </div>
+    </div>
   );
 }
