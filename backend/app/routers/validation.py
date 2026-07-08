@@ -1,3 +1,5 @@
+from typing import Annotated
+
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.orm import Session
 from time import time
@@ -59,12 +61,18 @@ def _build_validation_result(task: Task, result: dict, execution_time: float) ->
     return validation_result
 
 
-@router.post("/validate-solution")
+@router.post(
+    "/validate-solution",
+    responses={
+        404: {"description": "Task not found"},
+        400: {"description": "Missing code"}
+    }
+)
 def validate_solution(
     task_id: int,
-    force: bool = Query(False),
-    db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user),
+    force: Annotated[bool, Query()] = False,
+    db: Annotated[Session, Depends(get_db)] = None,
+    current_user: Annotated[User, Depends(get_current_user)] = None,
 ):
     task = TaskService.get_task(db=db, task_id=task_id, user_id=current_user.id)
 
@@ -104,11 +112,19 @@ def validate_solution(
     return validation_result
 
 
-@router.post("/fix-with-ai", response_model=ValidationFixResponse)
+@router.post(
+    "/fix-with-ai",
+    response_model=ValidationFixResponse,
+    responses={
+        404: {"description": "Task not found"},
+        400: {"description": "Missing code or task already passed validation"},
+        502: {"description": "Failed to rewrite code"}
+    }
+)
 def fix_validation_with_ai(
     task_id: int,
-    db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user),
+    db: Annotated[Session, Depends(get_db)],
+    current_user: Annotated[User, Depends(get_current_user)],
 ):
     task = TaskService.get_task(db=db, task_id=task_id, user_id=current_user.id)
 

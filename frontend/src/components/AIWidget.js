@@ -67,8 +67,8 @@ export default function AIWidget({ showAI, setShowAI, onTemplateGenerated }) {
         </div>
 
         <div className="ai-messages">
-          {messages.map((m, i) => (
-            <div key={i} className={`ai-msg ${m.role === 'assistant' ? 'bot' : 'user'}`}>
+          {messages.map((m, index) => (
+            <div key={`${m.role}-${index}`} className={`ai-msg ${m.role === 'assistant' ? 'bot' : 'user'}`}>
               <div className="ai-msg-sender">{m.role === 'assistant' ? 'AI Assistant' : 'You'}</div>
               <div className="ai-msg-text">{m.text}</div>
             </div>
@@ -77,9 +77,9 @@ export default function AIWidget({ showAI, setShowAI, onTemplateGenerated }) {
             <div className="ai-msg bot">
               <div className="ai-msg-sender">AI Assistant</div>
               <div className="ai-typing">
-                <span></span>
-                <span></span>
-                <span></span>
+                <span />
+                <span />
+                <span />
               </div>
             </div>
           )}

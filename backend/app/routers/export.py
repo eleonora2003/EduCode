@@ -1,5 +1,6 @@
+from typing import Annotated, List
+
 from fastapi import APIRouter, Depends, HTTPException, Response
-from typing import List
 from sqlalchemy.orm import Session
 
 from ..database import get_db
@@ -15,8 +16,8 @@ router = APIRouter(prefix="/api/export", tags=["Export"])
 @router.post("")
 def export_tasks(
     request: ExportRequest,
-    current_user: User = Depends(get_current_user),
-    db: Session = Depends(get_db)
+    current_user: Annotated[User, Depends(get_current_user)],
+    db: Annotated[Session, Depends(get_db)]
 ):
     """
     Export tasks in the specified format.
@@ -101,8 +102,8 @@ def export_tasks(
 @router.get("/{task_id}/markdown")
 def export_task_markdown(
     task_id: int,
-    current_user: User = Depends(get_current_user),
-    db: Session = Depends(get_db)
+    current_user: Annotated[User, Depends(get_current_user)],
+    db: Annotated[Session, Depends(get_db)]
 ):
     """
     Export a single task as Markdown.
@@ -129,8 +130,8 @@ def export_task_markdown(
 @router.get("/{task_id}/pdf")
 def export_task_pdf(
     task_id: int,
-    current_user: User = Depends(get_current_user),
-    db: Session = Depends(get_db)
+    current_user: Annotated[User, Depends(get_current_user)],
+    db: Annotated[Session, Depends(get_db)]
 ):
     """
     Export a single task as PDF.

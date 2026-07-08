@@ -1,6 +1,7 @@
 import re
+from typing import Annotated, List, Optional
+
 from fastapi import APIRouter, Depends, HTTPException, Query, status
-from typing import List, Optional
 from sqlalchemy.orm import Session
 
 from ..database import get_db
@@ -17,6 +18,9 @@ from ..services.task_service import TaskService
 from ..services.generation_service import generation_service
 
 router = APIRouter(prefix="/api/tasks", tags=["Tasks"])
+
+# Error message constants
+TASK_NOT_FOUND = "Task not found"
 
 
 def extract_language_from_description(description: str) -> str:
@@ -35,8 +39,8 @@ def extract_language_from_description(description: str) -> str:
 @router.post("/generate", response_model=TaskGenerateResponse)
 def generate_task(
     request: TaskGenerateRequest,
-    current_user: User = Depends(get_current_user),
-    db: Session = Depends(get_db)
+    current_user: Annotated[User, Depends(get_current_user)],
+    db: Annotated[Session, Depends(get_db)]
 ):
     selected_template = None
     template_name = request.template or "Default Template"
@@ -94,8 +98,8 @@ Use this custom template:
 @router.post("/generate-series", response_model=ExerciseSeriesResponse)
 def generate_exercise_series(
     request: ExerciseSeriesRequest,
-    current_user: User = Depends(get_current_user),
-    db: Session = Depends(get_db),
+    current_user: Annotated[User, Depends(get_current_user)],
+    db: Annotated[Session, Depends(get_db)],
 ):
     """Generate a progressive exercise series (Exercise 1, 2, 3…)."""
     selected_template = None
@@ -147,7 +151,7 @@ Use this custom template:
 @router.post("/refine", response_model=TaskRefineResponse)
 def refine_task_section(
     request: TaskRefineRequest,
-    current_user: User = Depends(get_current_user),
+    current_user: Annotated[User, Depends(get_current_user)],
 ):
     context = request.context.model_dump() if request.context else {}
 
@@ -175,21 +179,21 @@ def refine_task_section(
 @router.post("", response_model=TaskResponse, status_code=status.HTTP_201_CREATED)
 def create_task(
     task: TaskCreate,
-    current_user: User = Depends(get_current_user),
-    db: Session = Depends(get_db)
+    current_user: Annotated[User, Depends(get_current_user)],
+    db: Annotated[Session, Depends(get_db)]
 ):
     return TaskService.create_task(db=db, task=task, user_id=current_user.id)
 
 
 @router.get("", response_model=List[TaskResponse])
 def get_tasks(
-    language: Optional[str] = Query(None),
-    concept: Optional[str] = Query(None),
-    difficulty: Optional[str] = Query(None),
-    skip: int = Query(0, ge=0),
-    limit: int = Query(100, ge=1, le=100),
-    current_user: User = Depends(get_current_user),
-    db: Session = Depends(get_db)
+    language: Annotated[Optional[str], Query()] = None,
+    concept: Annotated[Optional[str], Query()] = None,
+    difficulty: Annotated[Optional[str], Query()] = None,
+    skip: Annotated[int, Query(ge=0)] = 0,
+    limit: Annotated[int, Query(ge=1, le=100)] = 100,
+    current_user: Annotated[User, Depends(get_current_user)] = None,
+    db: Annotated[Session, Depends(get_db)] = None
 ):
     return TaskService.get_tasks(
         db=db,
@@ -204,8 +208,8 @@ def get_tasks(
 
 @router.get("/statistics", response_model=TaskStatistics)
 def get_task_statistics(
-    current_user: User = Depends(get_current_user),
-    db: Session = Depends(get_db)
+    current_user: Annotated[User, Depends(get_current_user)],
+    db: Annotated[Session, Depends(get_db)]
 ):
     return TaskService.get_task_statistics(user_id=current_user.id, db=db)
 
@@ -213,15 +217,15 @@ def get_task_statistics(
 @router.get("/{task_id}", response_model=TaskResponse)
 def get_task(
     task_id: int,
-    current_user: User = Depends(get_current_user),
-    db: Session = Depends(get_db)
+    current_user: Annotated[User, Depends(get_current_user)],
+    db: Annotated[Session, Depends(get_db)]
 ):
     task = TaskService.get_task(db=db, task_id=task_id, user_id=current_user.id)
 
     if not task:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail="Task not found"
+            detail=TASK_NOT_FOUND
         )
 
     return task
@@ -231,8 +235,8 @@ def get_task(
 def update_task(
     task_id: int,
     task_update: TaskUpdate,
-    current_user: User = Depends(get_current_user),
-    db: Session = Depends(get_db)
+    current_user: Annotated[User, Depends(get_current_user)],
+    db: Annotated[Session, Depends(get_db)]
 ):
     updated_task = TaskService.update_task(
         db=db,
@@ -244,7 +248,7 @@ def update_task(
     if not updated_task:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail="Task not found"
+            detail=TASK_NOT_FOUND
         )
 
     return updated_task
@@ -253,8 +257,8 @@ def update_task(
 @router.delete("/{task_id}", status_code=status.HTTP_204_NO_CONTENT)
 def delete_task(
     task_id: int,
-    current_user: User = Depends(get_current_user),
-    db: Session = Depends(get_db)
+    current_user: Annotated[User, Depends(get_current_user)],
+    db: Annotated[Session, Depends(get_db)]
 ):
     success = TaskService.delete_task(
         db=db,
@@ -265,7 +269,7 @@ def delete_task(
     if not success:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail="Task not found"
+            detail=TASK_NOT_FOUND
         )
 
     return None

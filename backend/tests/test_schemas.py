@@ -1,4 +1,5 @@
 import pytest
+import math
 from datetime import datetime
 from pydantic import ValidationError
 
@@ -44,7 +45,7 @@ class TestUserCreate:
     def test_password_min_length(self):
         """Should require minimum 8 characters for password."""
         with pytest.raises(ValidationError):
-            UserCreate(email="test@example.com", password="short")
+            UserCreate(email="test@example.com", password="testpwd")
     
     def test_password_max_length(self):
         """Should reject password exceeding 72 characters."""
@@ -348,4 +349,4 @@ class TestValidationStatistics:
             average_execution_time=1.5
         )
         assert stats.total_validations == 10
-        assert stats.average_execution_time == 1.5
+        assert math.isclose(stats.average_execution_time, 1.5, rel_tol=1e-09)

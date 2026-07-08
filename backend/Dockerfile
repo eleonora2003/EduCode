@@ -15,11 +15,23 @@ RUN apt-get update && apt-get install -y \
     && apt-get install -y docker-ce-cli \
     && rm -rf /var/lib/apt/lists/*
 
+RUN addgroup --system nonroot \
+    && adduser --system nonroot --group nonroot
+
 COPY requirements.txt .
 
 RUN pip install --no-cache-dir -r requirements.txt
 
-COPY . .
+COPY alembic.ini .
+COPY alembic/ ./alembic/
+COPY app/ ./app/
+COPY tests/ ./tests/
+COPY conftest.py .
+COPY pytest.ini .
+
+RUN chown -R nonroot:nonroot /app
+
+USER nonroot
 
 EXPOSE 8000
 

@@ -3,6 +3,9 @@ from unittest.mock import MagicMock, patch
 
 from app.services.sandbox_service import run_python_validation
 
+# Constant for the docker patch path
+DOCKER_PATCH = 'app.services.sandbox_service.docker.from_env'
+
 
 class TestRunPythonValidation:
     """Core tests for run_python_validation function."""
@@ -22,7 +25,7 @@ class TestRunPythonValidation:
         
         mock_container.exec_run.return_value = mock_exec_result
         
-        with patch('app.services.sandbox_service.docker.from_env', return_value=mock_client):
+        with patch(DOCKER_PATCH, return_value=mock_client):
             result = run_python_validation(solution_code, test_code)
             
             assert result["passed"] is True
@@ -45,7 +48,7 @@ class TestRunPythonValidation:
         
         mock_container.exec_run.return_value = mock_exec_result
         
-        with patch('app.services.sandbox_service.docker.from_env', return_value=mock_client):
+        with patch(DOCKER_PATCH, return_value=mock_client):
             result = run_python_validation(solution_code, test_code)
             
             assert result["passed"] is False
@@ -72,7 +75,7 @@ assert multiply(0, 100) == 0
         
         mock_container.exec_run.return_value = mock_exec_result
         
-        with patch('app.services.sandbox_service.docker.from_env', return_value=mock_client):
+        with patch(DOCKER_PATCH, return_value=mock_client):
             result = run_python_validation(solution_code, test_code)
             
             assert result["passed"] is True
@@ -98,7 +101,7 @@ assert divide(10, 0) == float('inf')  # This will fail
         
         mock_container.exec_run.return_value = mock_exec_result
         
-        with patch('app.services.sandbox_service.docker.from_env', return_value=mock_client):
+        with patch(DOCKER_PATCH, return_value=mock_client):
             result = run_python_validation(solution_code, test_code)
             
             assert result["passed"] is False
@@ -120,7 +123,7 @@ assert divide(10, 0) == float('inf')  # This will fail
         
         mock_container.exec_run.return_value = mock_exec_result
         
-        with patch('app.services.sandbox_service.docker.from_env', return_value=mock_client):
+        with patch(DOCKER_PATCH, return_value=mock_client):
             result = run_python_validation(solution_code, test_code)
             
             assert result["passed"] is False

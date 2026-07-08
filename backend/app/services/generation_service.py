@@ -5,6 +5,9 @@ from openai import OpenAI
 
 from ..config import settings
 
+# Constants for default values
+DEFAULT_TEMPLATE_NAME = "Default Template"
+
 
 class GenerationService:
     """Service for AI-powered task generation using OpenAI."""
@@ -17,7 +20,7 @@ class GenerationService:
         language: str,
         concept: str,
         difficulty: str,
-        template_name: str = "Default Template"
+        template_name: str = DEFAULT_TEMPLATE_NAME
     ) -> Dict:
         system_prompt = self._get_system_prompt(language, template_name)
         user_prompt = self._get_user_prompt(language, concept, difficulty, template_name)
@@ -150,7 +153,7 @@ STRICT PYTHON OUTPUT RULES:
 
         return base_prompt + "\n\n" + template_instructions
 
-    def _get_template_instructions(self, template_name: str, language: str) -> str:
+    def _get_template_instructions(self, template_name: str, language: str = None) -> str:
         templates = {
             "Default Template": "Create a standard programming exercise with clear instructions and examples.",
 
@@ -177,7 +180,7 @@ STRICT PYTHON OUTPUT RULES:
 - Mention specific complexity targets"""
         }
 
-        return templates.get(template_name, templates["Default Template"])
+        return templates.get(template_name, templates[DEFAULT_TEMPLATE_NAME])
 
     def _get_user_prompt(
         self,
@@ -662,7 +665,7 @@ Return as a JSON array of objects with 'description' and 'test_code' fields."""
         self,
         language: str,
         concept: str,
-        template_name: str = "Default Template",
+        template_name: str = DEFAULT_TEMPLATE_NAME,
         exercise_count: int = 3,
     ) -> Dict:
         """Generate a progressive exercise series (Exercise 1 → 2 → 3…)."""

@@ -7,6 +7,8 @@ from typing import Dict, Tuple
 client = docker.from_env()
 
 TIMEOUT_SECONDS = 10
+NO_OUTPUT_RECEIVED = "No output received"
+JAVA_PUBLIC_CLASS_PATTERN = r"public\s+class\s+\w+"
 
 
 def _make_tar_file(filename: str, content: str) -> bytes:
@@ -113,7 +115,7 @@ print("=== ALL TESTS PASSED ===")
 
         return {
             "passed": passed,
-            "logs": logs or "No output received",
+            "logs": logs or NO_OUTPUT_RECEIVED,
             "passed_tests": total_tests if passed else 0,
             "total_tests": total_tests,
         }
@@ -183,9 +185,9 @@ def _normalize_java_solution(solution_code: str) -> str:
     code = re.sub(r"@Test\s*", "", code)
 
     if "public class Solution" not in code:
-        if re.search(r"public\s+class\s+\w+", code):
+        if re.search(JAVA_PUBLIC_CLASS_PATTERN, code):
             code = re.sub(
-                r"public\s+class\s+\w+",
+                JAVA_PUBLIC_CLASS_PATTERN,
                 "public class Solution",
                 code,
                 count=1,
@@ -207,9 +209,9 @@ def _normalize_java_tests(test_code: str) -> str:
     has_main = "public static void main" in code
 
     if not has_test_class:
-        if re.search(r"public\s+class\s+\w+", code):
+        if re.search(JAVA_PUBLIC_CLASS_PATTERN, code):
             code = re.sub(
-                r"public\s+class\s+\w+",
+                JAVA_PUBLIC_CLASS_PATTERN,
                 "public class TestSolution",
                 code,
                 count=1,
@@ -241,7 +243,7 @@ def _normalize_java_tests(test_code: str) -> str:
 
 
 def summarize_validation_failure(logs: str, language: str = "Python") -> str:
-    if not logs or logs.strip() == "No output received":
+    if not logs or logs.strip() == NO_OUTPUT_RECEIVED:
         return "Validation failed with no output from the sandbox."
 
     if logs.startswith("Compilation failed:"):
@@ -330,7 +332,7 @@ def run_java_validation(solution_code: str, test_code: str) -> Dict:
 
         return {
             "passed": passed,
-            "logs": logs or "No output received",
+            "logs": logs or NO_OUTPUT_RECEIVED,
             "passed_tests": total_tests if passed else 0,
             "total_tests": total_tests,
         }

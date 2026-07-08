@@ -1,3 +1,5 @@
+from typing import Annotated
+
 from fastapi import APIRouter, Depends
 from fastapi.responses import RedirectResponse
 from sqlalchemy.orm import Session
@@ -29,7 +31,7 @@ def google_login():
 
 
 @router.get("/google/callback")
-async def google_callback(code: str, db: Session = Depends(get_db)):
+async def google_callback(code: str, db: Annotated[Session, Depends(get_db)]):
 
     async with httpx.AsyncClient() as client:
 
@@ -102,7 +104,7 @@ def github_login():
 
 
 @router.get("/github/callback")
-async def github_callback(code: str, db: Session = Depends(get_db)):
+async def github_callback(code: str, db: Annotated[Session, Depends(get_db)]):
 
     async with httpx.AsyncClient() as client:
 

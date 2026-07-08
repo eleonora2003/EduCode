@@ -58,7 +58,7 @@ def sample_user():
     return {
         "id": 1,
         "email": "test@example.com",
-        "hashed_password": "testhash123",
+        "hashed_password": "placeholder_hash",
         "full_name": "Test User",
         "role": "teacher",
         "is_active": True

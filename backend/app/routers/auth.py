@@ -1,3 +1,5 @@
+from typing import Annotated
+
 from fastapi import APIRouter, Depends, HTTPException, status, Response
 from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.orm import Session
@@ -18,7 +20,11 @@ router = APIRouter(prefix="/api/auth", tags=["Authentication"])
 
 
 @router.post("/register", response_model=UserResponse)
-def register(user: UserCreate, response: Response, db: Session = Depends(get_db)):
+def register(
+    user: UserCreate,
+    response: Response,
+    db: Annotated[Session, Depends(get_db)]
+):
     """
     Register a new user or link password to an existing OAuth account.
     
@@ -59,8 +65,8 @@ def register(user: UserCreate, response: Response, db: Session = Depends(get_db)
 
 @router.post("/login", response_model=Token)
 def login(
-    form_data: OAuth2PasswordRequestForm = Depends(),
-    db: Session = Depends(get_db)
+    form_data: Annotated[OAuth2PasswordRequestForm, Depends()],
+    db: Annotated[Session, Depends(get_db)]
 ):
     """
     Authenticate user and return JWT token.
@@ -86,7 +92,10 @@ def login(
 
 
 @router.post("/login/json", response_model=Token)
-def login_json(login_data: UserLogin, db: Session = Depends(get_db)):
+def login_json(
+    login_data: UserLogin,
+    db: Annotated[Session, Depends(get_db)]
+):
     """
     Authenticate user with JSON body and return JWT token.
     
@@ -111,7 +120,9 @@ def login_json(login_data: UserLogin, db: Session = Depends(get_db)):
 
 
 @router.get("/me", response_model=UserResponse)
-def get_current_user_info(current_user: User = Depends(get_current_user)):
+def get_current_user_info(
+    current_user: Annotated[User, Depends(get_current_user)]
+):
     """
     Get current authenticated user information.
     
@@ -121,7 +132,9 @@ def get_current_user_info(current_user: User = Depends(get_current_user)):
 
 
 @router.post("/logout")
-def logout(current_user: User = Depends(get_current_user)):
+def logout(
+    current_user: Annotated[User, Depends(get_current_user)]
+):
     """
     Logout current user (client should remove token).
     

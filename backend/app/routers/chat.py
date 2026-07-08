@@ -1,5 +1,7 @@
 import json
 import re
+from typing import Annotated
+
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 
@@ -44,10 +46,10 @@ def _parse_chat_response(raw: str) -> ChatResponse:
         if data.get("template"):
             template = TemplateFromChat(**data["template"])
         return ChatResponse(reply=data.get("reply", raw), template=template)
-    except (json.JSONDecodeError, TypeError, ValueError):
+    except (json.JSONDecodeError, TypeError):
         pass
 
-    fence = re.search(r"```(?:json)?\s*(\{.*?\})\s*```", raw, re.DOTALL)
+    fence = re.search(r"```(?:json)?\s*(\{[^\}]*\})\s*```", raw, re.DOTALL)
     if fence:
         try:
             data = json.loads(fence.group(1))
@@ -55,17 +57,21 @@ def _parse_chat_response(raw: str) -> ChatResponse:
             if data.get("template"):
                 template = TemplateFromChat(**data["template"])
             return ChatResponse(reply=data.get("reply", raw), template=template)
-        except (json.JSONDecodeError, TypeError, ValueError):
+        except (json.JSONDecodeError, TypeError):
             pass
 
     return ChatResponse(reply=raw, template=None)
 
 
-@router.post("", response_model=ChatResponse)
+@router.post(
+    "",
+    response_model=ChatResponse,
+    responses={500: {"description": "AI service error"}}
+)
 def chat(
     request: ChatRequest,
-    current_user: User = Depends(get_current_user),
-    db: Session = Depends(get_db),
+    current_user: Annotated[User, Depends(get_current_user)],
+    db: Annotated[Session, Depends(get_db)],
 ):
     try:
         messages = [{"role": "system", "content": SYSTEM_PROMPT}]
