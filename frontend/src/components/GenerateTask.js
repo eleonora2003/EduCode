@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { tasksAPI, validationAPI, templatesAPI } from "../api/client";
+import { tasksAPI, templatesAPI } from "../api/client";
 import { IconBook, IconSpark, IconPython, IconJava } from "./icons";
 import PromptTuner from "./PromptTuner";
 
@@ -85,7 +85,14 @@ export default function GenerateTask({ task, setTask, onNavigate }) {
   const getSeriesLoadingMessages = (count) => {
     const planning = Array.from({ length: count }, (_, i) => {
       const num = i + 1;
-      const tone = num === 1 ? "warm-up" : num === count ? "final challenge" : "building skills";
+      let tone;
+      if (num === 1) {
+        tone = "warm-up";
+      } else if (num === count) {
+        tone = "final challenge";
+      } else {
+        tone = "building skills";
+      }
       return `Planning Exercise ${num} — ${tone}...`;
     });
     return [
@@ -280,11 +287,14 @@ export default function GenerateTask({ task, setTask, onNavigate }) {
     } catch (err) {
       console.error(err);
       const detail = err.response?.data?.detail;
-      const message = typeof detail === "string"
-        ? detail
-        : Array.isArray(detail)
-          ? detail.map((d) => d.msg || d).join(", ")
-          : "Error generating task. Please check your API key and try again.";
+      let message;
+      if (typeof detail === "string") {
+        message = detail;
+      } else if (Array.isArray(detail)) {
+        message = detail.map((d) => d.msg || d).join(", ");
+      } else {
+        message = "Error generating task. Please check your API key and try again.";
+      }
       alert(message);
       setTask(message);
     } finally {
@@ -308,7 +318,7 @@ export default function GenerateTask({ task, setTask, onNavigate }) {
 
     try {
       const base = buildGeneratePayload();
-      const { difficulty: _d, ...seriesPayload } = base;
+      const { difficulty, ...seriesPayload } = base;
       const res = await tasksAPI.generateSeries({
         ...seriesPayload,
         exercise_count: exerciseCount,
@@ -321,11 +331,14 @@ export default function GenerateTask({ task, setTask, onNavigate }) {
     } catch (err) {
       console.error(err);
       const detail = err.response?.data?.detail;
-      const message = typeof detail === "string"
-        ? detail
-        : Array.isArray(detail)
-          ? detail.map((d) => d.msg || d).join(", ")
-          : "Error generating exercise series. Please try again.";
+      let message;
+      if (typeof detail === "string") {
+        message = detail;
+      } else if (Array.isArray(detail)) {
+        message = detail.map((d) => d.msg || d).join(", ");
+      } else {
+        message = "Error generating exercise series. Please try again.";
+      }
       alert(message);
     } finally {
       setLoading(false);
@@ -504,10 +517,7 @@ export default function GenerateTask({ task, setTask, onNavigate }) {
       >
         {loading
           ? "Generating..."
-          : options.buttonLabel
-            || (generationMode === "series"
-              ? `Create ${exerciseCount} Exercises`
-              : "Create Exercise")}
+          : options.buttonLabel || (generationMode === "series" ? `Create ${exerciseCount} Exercises` : "Create Exercise")}
       </button>
     </div>
   );

@@ -1,4 +1,4 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { tasksAPI } from "../api/client";
 import { IconWand, IconClose } from "./icons";
 
@@ -44,6 +44,7 @@ export default function PromptTuner({
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const contentRef = useRef(null);
+  const modalRef = useRef(null);
 
   const captureSelection = () => {
     const selection = window.getSelection();
@@ -101,6 +102,46 @@ export default function PromptTuner({
     }
   };
 
+  // Handle Escape key to close modal
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (open && e.key === "Escape") {
+        closeTuner();
+      }
+    };
+
+    if (open) {
+      document.addEventListener("keydown", handleKeyDown);
+    }
+
+    return () => {
+      document.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [open]);
+
+  // Focus the textarea when modal opens
+  useEffect(() => {
+    if (open && modalRef.current) {
+      const textarea = modalRef.current.querySelector("textarea");
+      if (textarea) {
+        textarea.focus();
+      }
+    }
+  }, [open]);
+
+  const handleOverlayClick = (e) => {
+    if (e.target === e.currentTarget) {
+      closeTuner();
+    }
+  };
+
+  const handleOverlayKeyDown = (e) => {
+    if (e.key === "Enter" || e.key === " ") {
+      e.preventDefault();
+      closeTuner();
+    }
+  };
+
   return (
     <div className="prompt-tuner-section">
       <div className="prompt-tuner-header">
@@ -122,17 +163,28 @@ export default function PromptTuner({
         className={`prompt-tuner-content${codeBlock ? " prompt-tuner-code" : ""}`}
         onMouseUp={captureSelection}
         onKeyUp={captureSelection}
+        role="region"
+        aria-label={`${FIELD_LABELS[field]} content area`}
       >
         {children}
       </div>
 
       {open && (
-        <div className="prompt-tuner-overlay" onClick={closeTuner}>
-          <div
+        <div
+          className="prompt-tuner-overlay"
+          onClick={handleOverlayClick}
+          onKeyDown={handleOverlayKeyDown}
+          role="presentation"
+          aria-hidden="true"
+          tabIndex={-1}
+        >
+          <dialog
+            ref={modalRef}
             className="prompt-tuner-modal"
-            onClick={(e) => e.stopPropagation()}
-            role="dialog"
+            open
             aria-labelledby="prompt-tuner-title"
+            role="alertdialog"
+            aria-modal="true"
           >
             <div className="prompt-tuner-modal-header">
               <div>
@@ -222,7 +274,7 @@ export default function PromptTuner({
                 {loading ? "Regenerating…" : "Apply changes"}
               </button>
             </div>
-          </div>
+          </dialog>
         </div>
       )}
     </div>

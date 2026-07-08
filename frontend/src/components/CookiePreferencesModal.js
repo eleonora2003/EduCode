@@ -73,8 +73,8 @@ function CookiePreferencesModal() {
   if (!isModalOpen) return null;
 
   return (
-    <div className="cookie-modal-overlay" onClick={handleOverlayClick} role="dialog" aria-labelledby="cookie-modal-title">
-      <div className="cookie-modal" onClick={(e) => e.stopPropagation()}>
+    <div className="cookie-modal-overlay" onClick={handleOverlayClick} onKeyDown={handleOverlayClick} role="dialog" aria-labelledby="cookie-modal-title" tabIndex={-1}>
+      <div className="cookie-modal" onClick={(e) => e.stopPropagation()} onKeyDown={(e) => e.stopPropagation()}>
         <div className="cookie-modal-header">
           <div className="cookie-modal-header-content">
             <div className="cookie-modal-icon">
@@ -134,7 +134,7 @@ function CookiePreferencesModal() {
             ))}
           </div>
 
-          {consent && consent.updatedAt && (
+          {consent?.updatedAt && (
             <div className="cookie-modal-last-update">
               <small>
                 Last updated: {new Date(consent.updatedAt).toLocaleDateString('en-US', {

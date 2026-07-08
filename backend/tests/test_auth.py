@@ -200,8 +200,11 @@ class TestGetCurrentUser:
         """Should raise exception for invalid token."""
         from fastapi import HTTPException
         
+        # Use an obviously fake token pattern for testing invalid token handling
+        invalid_token = "invalid.test.token"
+        
         with pytest.raises(HTTPException) as exc_info:
-            get_current_user(token="invalid.token.here", db=mock_db)
+            get_current_user(token=invalid_token, db=mock_db)
         assert exc_info.value.status_code == 401
     
     def test_get_current_user_inactive_user(self, mock_db, mock_settings):

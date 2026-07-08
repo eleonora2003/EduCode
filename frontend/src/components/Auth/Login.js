@@ -16,7 +16,7 @@ export default function Login() {
   const navigate = useNavigate();
 
   useEffect(() => {
-    document.documentElement.setAttribute('data-theme', theme);
+    document.documentElement.dataset.theme = theme;
     localStorage.setItem('theme', theme);
   }, [theme]);
 
@@ -132,7 +132,7 @@ export default function Login() {
           <button type="submit" className="btn-primary btn-submit" disabled={loading}>
             {loading ? (
               <>
-                <span className="spinner"></span>
+                <span className="spinner" />
                 Signing in...
               </>
             ) : (

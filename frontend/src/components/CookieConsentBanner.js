@@ -6,8 +6,7 @@ function CookieConsentBanner() {
     isBannerVisible,
     acceptAll,
     rejectAll,
-    openPreferencesModal,
-    COOKIE_CATEGORIES
+    openPreferencesModal
   } = useCookieConsent();
 
   if (!isBannerVisible) return null;

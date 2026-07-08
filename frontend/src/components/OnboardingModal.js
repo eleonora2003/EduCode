@@ -46,10 +46,10 @@ export default function OnboardingModal({ onClose, onNavigate, onOpenAI }) {
         </div>
         <div className="onboarding-body">
           <div className="features-grid">
-            {features.map((feature, i) => {
+            {features.map((feature) => {
               const Icon = feature.icon;
               return (
-                <button key={i} type="button" className="feature-card clickable" onClick={() => handleFeatureClick(feature)}>
+                <button key={feature.title} type="button" className="feature-card clickable" onClick={() => handleFeatureClick(feature)}>
                   <div className="feature-icon-svg"><Icon /></div>
                   <div className="feature-title">{feature.title}</div>
                   <div className="feature-description">{feature.description}</div>

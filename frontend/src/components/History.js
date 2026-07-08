@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { tasksAPI, validationAPI, exportAPI } from "../api/client";
+import { tasksAPI, exportAPI } from "../api/client";
 
 export default function History({ onNavigate }) {
   const [tasks, setTasks] = useState([]);
@@ -166,8 +166,9 @@ export default function History({ onNavigate }) {
       <div className="form-card">
         <div className="form-row">
           <div className="form-group">
-            <label>Filter by Language</label>
+            <label htmlFor="filter-language">Filter by Language</label>
             <select 
+              id="filter-language"
               value={filter.language} 
               onChange={(e) => setFilter({...filter, language: e.target.value})}
             >
@@ -177,8 +178,9 @@ export default function History({ onNavigate }) {
             </select>
           </div>
           <div className="form-group">
-            <label>Filter by Difficulty</label>
+            <label htmlFor="filter-difficulty">Filter by Difficulty</label>
             <select 
+              id="filter-difficulty"
               value={filter.difficulty} 
               onChange={(e) => setFilter({...filter, difficulty: e.target.value})}
             >

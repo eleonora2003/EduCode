@@ -12,7 +12,7 @@ export default function Template({ onNavigate, aiTemplateDraft, onDraftConsumed 
   const [learningGoals, setLearningGoals] = useState("");
   const [restrictions, setRestrictions] = useState("");
   const [codeTemplate, setCodeTemplate] = useState(
-    `def solution(input_data):\n    \"\"\"\n    TODO: Implement your solution here\n    \"\"\"\n    pass`
+    `def solution(input_data):\n    """\n    TODO: Implement your solution here\n    """\n    pass`
   );
 
   const [isSaving, setIsSaving] = useState(false);
@@ -76,7 +76,7 @@ export default function Template({ onNavigate, aiTemplateDraft, onDraftConsumed 
     const saveFromAI = async () => {
       setTemplateName(aiTemplateDraft.name || "");
       setLanguage(aiTemplateDraft.language || "Python");
-      setConcept(aiTemplateDraft.concept || "Loops");
+     setConcept(aiTemplateDraft.concept || "Loops");
       setDifficulty(aiTemplateDraft.difficulty || "Basic");
       setLearningGoals(aiTemplateDraft.learning_goals || "");
       setRestrictions(aiTemplateDraft.restrictions || "");
@@ -166,7 +166,7 @@ ${codeTemplate}`;
       setLearningGoals("");
       setRestrictions("");
       setCodeTemplate(
-        `def solution(input_data):\n    \"\"\"\n    TODO: Implement your solution here\n    \"\"\"\n    pass`
+        `def solution(input_data):\n    """\n    TODO: Implement your solution here\n    """\n    pass`
       );
       setStep(0);
       await loadTemplates();
@@ -226,8 +226,9 @@ ${codeTemplate}`;
                 <p className="form-subtitle">Set up template name and programming language</p>
 
                 <div className="form-group">
-                  <label>Template Name</label>
+                  <label htmlFor="template-name">Template Name</label>
                   <input
+                    id="template-name"
                     value={templateName}
                     onChange={(e) => setTemplateName(e.target.value)}
                     type="text"
@@ -236,16 +237,16 @@ ${codeTemplate}`;
                 </div>
 
                 <div className="form-group">
-                  <label>Programming Language</label>
-                  <select value={language} onChange={(e) => setLanguage(e.target.value)}>
+                  <label htmlFor="programming-language">Programming Language</label>
+                  <select id="programming-language" value={language} onChange={(e) => setLanguage(e.target.value)}>
                     <option>Python</option>
                     <option>Java</option>
                   </select>
                 </div>
 
                 <div className="form-group">
-                  <label>Concept</label>
-                  <select value={concept} onChange={(e) => setConcept(e.target.value)}>
+                  <label htmlFor="concept">Concept</label>
+                  <select id="concept" value={concept} onChange={(e) => setConcept(e.target.value)}>
                     <option>Loops</option>
                     <option>Functions</option>
                     <option>Arrays</option>
@@ -260,8 +261,8 @@ ${codeTemplate}`;
                 </div>
 
                 <div className="form-group">
-                  <label>Difficulty</label>
-                  <select value={difficulty} onChange={(e) => setDifficulty(e.target.value)}>
+                  <label htmlFor="difficulty">Difficulty</label>
+                  <select id="difficulty" value={difficulty} onChange={(e) => setDifficulty(e.target.value)}>
                     <option>Basic</option>
                     <option>Intermediate</option>
                     <option>Advanced</option>
@@ -276,8 +277,9 @@ ${codeTemplate}`;
                 <p className="form-subtitle">Define what students should learn</p>
 
                 <div className="form-group">
-                  <label>Learning Goals</label>
+                  <label htmlFor="learning-goals">Learning Goals</label>
                   <textarea
+                    id="learning-goals"
                     value={learningGoals}
                     onChange={(e) => setLearningGoals(e.target.value)}
                     placeholder="Define the learning objectives for this template..."
@@ -292,8 +294,9 @@ ${codeTemplate}`;
                 <p className="form-subtitle">Add constraints and limitations</p>
 
                 <div className="form-group">
-                  <label>Restrictions</label>
+                  <label htmlFor="restrictions">Restrictions</label>
                   <textarea
+                    id="restrictions"
                     value={restrictions}
                     onChange={(e) => setRestrictions(e.target.value)}
                     placeholder="Specify any constraints or limitations..."
@@ -308,8 +311,9 @@ ${codeTemplate}`;
                 <p className="form-subtitle">Define the starter code structure</p>
 
                 <div className="form-group">
-                  <label>Code Structure Template</label>
+                  <label htmlFor="code-template">Code Structure Template</label>
                   <textarea
+                    id="code-template"
                     value={codeTemplate}
                     onChange={(e) => setCodeTemplate(e.target.value)}
                     style={{ minHeight: 180, fontFamily: "Courier New, monospace" }}

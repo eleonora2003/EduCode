@@ -60,14 +60,22 @@ export default function Export({ onNavigate }) {
         task_ids: selectedTasks,
         format: exportFormat
       });
-      const mimeType =
-        exportFormat === "pdf"
-          ? "application/pdf"
-          : exportFormat === "docx"
-          ? "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
-          : exportFormat === "moodle_xml"
-          ? "application/xml"
-          : "text/markdown";
+      
+      const mimeTypes = {
+        pdf: "application/pdf",
+        docx: "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+        moodle_xml: "application/xml",
+        markdown: "text/markdown"
+      };
+      const mimeType = mimeTypes[exportFormat] || "text/markdown";
+
+      const fileExtensions = {
+        pdf: "pdf",
+        docx: "docx",
+        moodle_xml: "xml",
+        markdown: "md"
+      };
+      const extension = fileExtensions[exportFormat] || "md";
 
       const blob = new Blob([response.data], {
         type: mimeType,
@@ -75,15 +83,7 @@ export default function Export({ onNavigate }) {
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = `edocode_tasks_${new Date().toISOString().slice(0,10)}.${
-        exportFormat === "pdf"
-          ? "pdf"
-          : exportFormat === "docx"
-          ? "docx"
-          : exportFormat === "moodle_xml"
-          ? "xml"
-          : "md"
-      }`;
+      a.download = `edocode_tasks_${new Date().toISOString().slice(0, 10)}.${extension}`;
       a.click();
       URL.revokeObjectURL(url);
     } catch (err) {
@@ -119,8 +119,9 @@ export default function Export({ onNavigate }) {
         <h2>Export Settings</h2>
         <div className="form-row">
           <div className="form-group">
-            <label>Export Format</label>
+            <label htmlFor="export-format">Export Format</label>
             <select 
+              id="export-format"
               value={exportFormat} 
               onChange={(e) => setExportFormat(e.target.value)}
             >
@@ -131,7 +132,7 @@ export default function Export({ onNavigate }) {
             </select>
           </div>
           <div className="form-group">
-            <label>Selected Tasks</label>
+            <div className="form-label-text">Selected Tasks</div>
             <div style={{ padding: '10px 0' }}>
               {selectedTasks.length} of {tasks.length} tasks selected
             </div>
