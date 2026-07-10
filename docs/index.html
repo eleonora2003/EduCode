@@ -1,0 +1,339 @@
+<!DOCTYPE HTML>
+<!--
+    Spectral by HTML5 UP
+    html5up.net | @ajlkn
+    Free for personal and commercial use under the CCA 3.0 license
+-->
+<html>
+<head>
+    <title>EduCode - AI Programming Task Generator</title>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no" />
+    <link rel="stylesheet" href="assets/css/main.css" />
+    <noscript>
+        <link rel="stylesheet" href="assets/css/noscript.css" />
+    </noscript>
+</head>
+<body class="landing is-preload">
+
+    <div id="page-wrapper">
+
+        <!-- Header -->
+        <header id="header" class="alt">
+            <h1><a href="index.html">EduCode</a></h1>
+            <nav id="nav">
+                <ul>
+                    <li class="special">
+                        <a href="#menu" class="menuToggle">
+                            <span>Menu</span>
+                        </a>
+                        <div id="menu">
+							<ul>
+								<li><a href="#banner">Home</a></li>
+								<li><a href="#one">Introduction</a></li>
+								<li><a href="#workflow">How it Works</a></li>
+								<li><a href="#features">Core Features</a></li>
+								<li><a href="#benefits">Key Benefits</a></li>
+								<li><a href="#architecture">Architecture</a></li>
+								<li><a href="#mockups">Mockups</a></li>
+								<li><a href="#tech">Technology Stack</a></li>
+							</ul>
+						</div>
+                    </li>
+                </ul>
+            </nav>
+        </header>
+
+        <!-- Banner -->
+        <section id="banner">
+            <div class="inner">
+                <h2>EduCode</h2>
+                <p>
+                    AI-Powered Programming Task Generator<br />
+                    for teachers and programming educators
+                </p>
+                <ul class="actions special">
+                    <li><a href="#features" class="button primary">Explore Features</a></li>
+                </ul>
+            </div>
+            <a href="#one" class="more scrolly">Learn More</a>
+        </section>
+
+        <!-- Introduction -->
+        <section id="one" class="wrapper style1 special">
+            <div class="inner">
+                <header class="major">
+                    <h2>Intelligent Programming Exercise<br />Generation Platform</h2>
+                    <p>
+                        EduCode is an AI-powered educational platform that helps teachers and instructors 
+                        automatically generate programming tasks, reference solutions, unit tests, 
+                        and validation workflows using reusable templates.
+                    </p>
+                </header>
+                <ul class="icons major">
+                    <li><span class="icon solid fa-code major style1"></span></li>
+                    <li><span class="icon solid fa-robot major style2"></span></li>
+                    <li><span class="icon solid fa-graduation-cap major style3"></span></li>
+                </ul>
+            </div>
+        </section>
+
+
+		<section id="workflow" class="wrapper style3 special">
+			<div class="inner">
+
+				<header class="major">
+					<h2>How It Works</h2>
+					<p>
+						EduCode follows a simple AI-driven workflow to generate
+						complete programming exercises.
+					</p>
+				</header>
+
+				<ul class="features">
+
+					<li class="icon solid fa-sliders-h">
+						<h3>1. Input Setup</h3>
+						<p>
+							User selects programming language, topic and difficulty level.
+						</p>
+					</li>
+
+					<li class="icon solid fa-layer-group">
+						<h3>2. Template Selection</h3>
+						<p>
+							System applies a reusable educational template with rules and structure.
+						</p>
+					</li>
+
+					<li class="icon solid fa-brain">
+						<h3>3. AI Generation</h3>
+						<p>
+							OpenAI generates task description, reference solution and unit tests.
+						</p>
+					</li>
+
+					<li class="icon solid fa-shield-alt">
+						<h3>4. Validation</h3>
+						<p>
+							Code is executed and tested inside a secure Docker sandbox environment.
+						</p>
+					</li>
+
+					<li class="icon solid fa-archive">
+						<h3>5. Storage & Export</h3>
+						<p>
+							Results are saved, stored in history and can be exported to Markdown, PDF or Moodle XML.
+						</p>
+					</li>
+
+				</ul>
+
+			</div>
+		</section>
+
+
+
+        <!-- Architecture + ERD + Use Case -->
+        <section id="architecture" class="wrapper alt style2">
+            
+            <section class="spotlight">
+                <div class="image">
+                    <img src="images/ArchitecturalDesign_EduCode.png" alt="System Architecture" />
+                </div>
+                <div class="content">
+                    <h2>Modern System Architecture</h2>
+                    <p>
+                        React frontend, FastAPI backend, PostgreSQL database, 
+                        OpenAI integration and Docker sandbox for secure code execution.
+                    </p>
+                </div>
+            </section>
+
+            <section class="spotlight">
+                <div class="image">
+                    <img src="images/ERD_EduCode.png" alt="ER Diagram" />
+                </div>
+                <div class="content">
+                    <h2>Database Design (ER Diagram)</h2>
+                    <p>
+                        Well-structured relational database with users, templates, tasks, 
+                        test cases, reference solutions and validation results.
+                    </p>
+                </div>
+            </section>
+
+            <section class="spotlight">
+                <div class="image">
+                    <img src="images/UseCaseDiagram_EduCode.png" 
+                         alt="Use Case Diagram" 
+                         style="border-radius: 12px;" />
+                </div>
+                <div class="content">
+                    <h2>Use Case Diagram</h2>
+                    <p>
+                        The diagram shows how professors and teaching assistants interact with the system — 
+                        generating tasks, managing templates, validating solutions, exporting materials, 
+                        and tracking history.
+                    </p>
+                </div>
+            </section>
+
+        </section>
+
+		<!-- Features -->
+        <section id="features" class="wrapper style3 special">
+            <div class="inner">
+                <header class="major">
+                    <h2>Core Features</h2>
+                </header>
+                <ul class="features">
+                    <li class="icon solid fa-brain">
+                        <h3>AI Task Generation</h3>
+                        <p>Generate exercises automatically based on topic, difficulty and learning goals.</p>
+                    </li>
+                    <li class="icon solid fa-layer-group">
+                        <h3>Template System</h3>
+                        <p>Reusable templates with constraints, starter code and pedagogical settings.</p>
+                    </li>
+                    <li class="icon solid fa-vial">
+                        <h3>Unit Test Generation</h3>
+                        <p>Automatic creation of test cases and reference solutions.</p>
+                    </li>
+                    <li class="icon solid fa-shield-alt">
+                        <h3>Docker Sandbox</h3>
+                        <p>Secure isolated environment for code execution and validation.</p>
+                    </li>
+                    <li class="icon solid fa-file-export">
+                        <h3>Export System</h3>
+                        <p>Export to PDF, Markdown and Moodle XML formats.</p>
+                    </li>
+                    <li class="icon solid fa-history">
+                        <h3>Task History</h3>
+                        <p>Full history of generated tasks, templates and validation logs.</p>
+                    </li>
+                </ul>
+            </div>
+        </section>
+
+		<section class="wrapper style1 special" id="benefits">
+			<div class="inner">
+				<header class="major">
+				<h2>Key Benefits</h2>
+				</header>
+
+				<ul style="list-style:none; padding:0;">
+				<li>⚡ Faster creation of programming exercises</li>
+				<li>🎯 Consistent difficulty levels using templates</li>
+				<li>🧪 Automatic test case generation</li>
+				<li>🔒 Secure execution in Docker sandbox</li>
+				<li>📚 Reusable educational content</li>
+				</ul>
+			</div>
+		</section>
+
+        <!-- Mockups -->
+        <section id="mockups" class="wrapper alt style2">
+            <header class="major" align="center">
+				<br>
+				<h2 align="center">Mockups</h2>
+			</header>
+            <section class="spotlight">
+                <div class="image"><img src="images/generate-task-1.png" alt="Task Generation" /></div>
+                <div class="content">
+                    <h2>Task Generation</h2>
+                    <p>Interface where teachers create new programming tasks with AI support.</p>
+                </div>
+            </section>
+
+            <section class="spotlight">
+                <div class="image"><img src="images/generate-task-2.png" alt="Generated Task" /></div>
+                <div class="content">
+                    <h2>Generated Task Preview</h2>
+                    <p>Final output with task description, reference solution and unit tests.</p>
+                </div>
+            </section>
+
+            <section class="spotlight">
+                <div class="image"><img src="images/templates-1.png" alt="Template Editor" /></div>
+                <div class="content">
+                    <h2>Template Editor</h2>
+                    <p>Creating and editing reusable task templates.</p>
+                </div>
+            </section>
+
+            <section class="spotlight">
+                <div class="image"><img src="images/templates-2.png" alt="Template Settings" /></div>
+                <div class="content">
+                    <h2>Template Settings</h2>
+                    <p>Defining constraints, starter code and learning objectives.</p>
+                </div>
+            </section>
+
+            <section class="spotlight">
+                <div class="image"><img src="images/validation.png" alt="Validation Dashboard" /></div>
+                <div class="content">
+                    <h2>Validation Dashboard</h2>
+                    <p>Automatic testing of student solutions in Docker sandbox.</p>
+                </div>
+            </section>
+
+            <section class="spotlight">
+                <div class="image"><img src="images/export.png" alt="Export" /></div>
+                <div class="content">
+                    <h2>Export Options</h2>
+                    <p>Export tasks to PDF, Markdown and Moodle XML.</p>
+                </div>
+            </section>
+
+            <section class="spotlight">
+                <div class="image"><img src="images/history.png" alt="Task History" /></div>
+                <div class="content">
+                    <h2>Task History</h2>
+                    <p>Browse and reuse previously generated tasks and templates.</p>
+                </div>
+            </section>
+        </section>
+
+        <!-- Technology Stack -->
+        <section id="tech" class="wrapper style4">
+            <div class="inner">
+                <header>
+                    <h2>Technology Stack</h2>
+                    <p>
+                        React • React Router • Axios • FastAPI • SQLite • OpenAI • Docker • JWT
+                    </p>
+                </header>
+                <ul class="actions stacked">
+                    <li><a href="https://github.com/eleonora2003/EduCode" class="button fit primary">View on GitHub</a></li>
+                </ul>
+            </div>
+        </section>
+
+        <!-- Footer -->
+        <footer id="footer">
+            <ul class="icons">
+                <li>
+					<a href="https://github.com/eleonora2003/EduCode"
+					class="icon brands fa-github">
+						<span class="label">GitHub</span>
+					</a>
+				</li>
+            <ul class="copyright">
+                <li>&copy; EduCode 2026</li>
+                <li>AI Programming Task Generator</li>
+            </ul>
+        </footer>
+
+    </div>
+
+    <!-- Scripts -->
+    <script src="assets/js/jquery.min.js"></script>
+    <script src="assets/js/jquery.scrollex.min.js"></script>
+    <script src="assets/js/jquery.scrolly.min.js"></script>
+    <script src="assets/js/browser.min.js"></script>
+    <script src="assets/js/breakpoints.min.js"></script>
+    <script src="assets/js/util.js"></script>
+    <script src="assets/js/main.js"></script>
+</body>
+</html>
