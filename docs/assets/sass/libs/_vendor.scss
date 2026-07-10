@@ -325,9 +325,6 @@
 	/// @param {string} $name Name.
 	@mixin keyframes($name) {
 
-		@-moz-keyframes #{$name} { @content; }
-		@-webkit-keyframes #{$name} { @content; }
-		@-ms-keyframes #{$name} { @content; }
 		@keyframes #{$name} { @content; }
 
 	}
@@ -362,7 +359,7 @@
 			}
 
 		// Expand just the value?
-			@elseif $expandValue {
+			@else if $expandValue {
 			    @each $vendor in $vendor-prefixes {
 			        #{$property}: #{str-replace-all($value, '-prefix-', $vendor)};
 			    }

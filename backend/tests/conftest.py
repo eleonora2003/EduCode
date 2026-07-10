@@ -52,13 +52,17 @@ def mock_db():
     return db
 
 
+# Test-only placeholder for hashed password (not a real credential)
+TEST_PASSWORD_HASH = "test_placeholder_hash"
+
+
 @pytest.fixture()
 def sample_user():
     """Sample user data for testing."""
     return {
         "id": 1,
         "email": "test@example.com",
-        "hashed_password": "placeholder_hash",
+        "hashed_password": TEST_PASSWORD_HASH,
         "full_name": "Test User",
         "role": "teacher",
         "is_active": True

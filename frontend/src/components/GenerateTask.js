@@ -500,27 +500,35 @@ export default function GenerateTask({ task, setTask, onNavigate }) {
     </div>
   );
 
-  const renderGenerateActions = (backStep, options = {}) => (
-    <div className="generate-actions-row wizard-stagger">
-      <button
-        className="btn-secondary interactive-btn"
-        style={{ "--stagger": 0 }}
-        onClick={() => goToStep(backStep)}
-      >
-        ← Back
-      </button>
-      <button
-        className="btn-primary btn-generate-animated interactive-btn btn-shimmer"
-        style={{ "--stagger": 1 }}
-        onClick={handleGenerateClick}
-        disabled={loading}
-      >
-        {loading
-          ? "Generating..."
-          : options.buttonLabel || (generationMode === "series" ? `Create ${exerciseCount} Exercises` : "Create Exercise")}
-      </button>
-    </div>
-  );
+  const renderGenerateActions = (backStep, options = {}) => {
+    const defaultButtonLabel = generationMode === "series"
+      ? `Create ${exerciseCount} Exercises`
+      : "Create Exercise";
+
+    const buttonLabel = loading
+      ? "Generating..."
+      : options.buttonLabel || defaultButtonLabel;
+
+    return (
+      <div className="generate-actions-row wizard-stagger">
+        <button
+          className="btn-secondary interactive-btn"
+          style={{ "--stagger": 0 }}
+          onClick={() => goToStep(backStep)}
+        >
+          ← Back
+        </button>
+        <button
+          className="btn-primary btn-generate-animated interactive-btn btn-shimmer"
+          style={{ "--stagger": 1 }}
+          onClick={handleGenerateClick}
+          disabled={loading}
+        >
+          {buttonLabel}
+        </button>
+      </div>
+    );
+  };
 
   const saveTask = async () => {
     if (!generatedData || isSaving || saved) return;
@@ -599,6 +607,18 @@ export default function GenerateTask({ task, setTask, onNavigate }) {
     };
 
     return colors[diff] || "#6b7280";
+  };
+
+  const getSaveButtonText = () => {
+    if (isSaving) return "Saving...";
+    if (saved) return "Saved";
+    return "Save to History";
+  };
+
+  const getSaveSeriesButtonText = () => {
+    if (isSavingSeries) return "Saving...";
+    if (seriesSaved) return "All Saved";
+    return "Save All to History";
   };
 
   return (
@@ -1217,7 +1237,7 @@ export default function GenerateTask({ task, setTask, onNavigate }) {
               onClick={saveTask}
               disabled={saved || isSaving}
             >
-              {isSaving ? "Saving..." : saved ? "Saved" : "Save to History"}
+              {getSaveButtonText()}
             </button>
 
             <button
@@ -1392,7 +1412,7 @@ export default function GenerateTask({ task, setTask, onNavigate }) {
               onClick={saveAllExercises}
               disabled={seriesSaved || isSavingSeries}
             >
-              {isSavingSeries ? "Saving..." : seriesSaved ? "All Saved" : "Save All to History"}
+              {getSaveSeriesButtonText()}
             </button>
             <button className="btn-secondary" onClick={exportSeriesMarkdown}>
               Export Series (.md)
