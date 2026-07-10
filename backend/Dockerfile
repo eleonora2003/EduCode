@@ -24,7 +24,6 @@ COPY alembic.ini .
 COPY alembic/ ./alembic/
 COPY app/ ./app/
 COPY tests/ ./tests/
-COPY conftest.py .
 COPY pytest.ini .
 
 
