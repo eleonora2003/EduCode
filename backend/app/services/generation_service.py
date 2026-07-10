@@ -149,11 +149,11 @@ STRICT PYTHON OUTPUT RULES:
 - The tests should be executable directly after importing the solution.
 """
 
-        template_instructions = self._get_template_instructions(template_name, language)
+        template_instructions = self._get_template_instructions(template_name)
 
         return base_prompt + "\n\n" + template_instructions
 
-    def _get_template_instructions(self, template_name: str, language: str = None) -> str:
+    def _get_template_instructions(self, template_name: str) -> str:
         templates = {
             "Default Template": "Create a standard programming exercise with clear instructions and examples.",
 
@@ -348,47 +348,55 @@ Generate a complete, self-contained exercise that a student could work on indepe
 - Include at least 3-5 assert statements
 - Cover basic, edge, and error cases where appropriate"""
 
+    def _find_section_start(self, text: str, section_name: str) -> int:
+        """Find the start index of a section in the text."""
+        patterns = [
+            f"## {section_name}",
+            f"**{section_name}**",
+            f"### {section_name}",
+            f"{section_name}:",
+            f"---\n{section_name}"
+        ]
+
+        for pattern in patterns:
+            idx = text.find(pattern)
+            if idx != -1:
+                start_idx = idx + len(pattern)
+                # Skip whitespace and colons after the pattern
+                while start_idx < len(text) and text[start_idx] in [":", " ", "\n", "\t"]:
+                    start_idx += 1
+                return start_idx
+
+        return -1
+
+    def _find_section_end(self, text: str, start_idx: int, next_sections: list) -> int:
+        """Find the end index of a section by looking for the next section."""
+        end_idx = len(text)
+        next_patterns = ["## {section}", "**{section}**", "### {section}"]
+
+        for next_section in next_sections:
+            for pattern_template in next_patterns:
+                next_pattern = pattern_template.format(section=next_section)
+                next_idx = text.find(next_pattern, start_idx)
+                if next_idx != -1 and next_idx < end_idx:
+                    end_idx = next_idx
+
+        return end_idx
+
     def _extract_section(self, text: str, section_names: list) -> dict:
         result = {}
 
         for i, section in enumerate(section_names):
-            patterns = [
-                f"## {section}",
-                f"**{section}**",
-                f"### {section}",
-                f"{section}:",
-                f"---\n{section}"
-            ]
+            start_idx = self._find_section_start(text, section)
 
-            start_idx = -1
+            if start_idx == -1:
+                continue
 
-            for pattern in patterns:
-                idx = text.find(pattern)
+            next_sections = section_names[i + 1:]
+            end_idx = self._find_section_end(text, start_idx, next_sections)
 
-                if idx != -1:
-                    start_idx = idx + len(pattern)
-
-                    while start_idx < len(text) and text[start_idx] in [":", " ", "\n", "\t"]:
-                        start_idx += 1
-
-                    break
-
-            if start_idx != -1:
-                end_idx = len(text)
-
-                for next_section in section_names[i + 1:]:
-                    for next_pattern in [
-                        f"## {next_section}",
-                        f"**{next_section}**",
-                        f"### {next_section}"
-                    ]:
-                        next_idx = text.find(next_pattern, start_idx)
-
-                        if next_idx != -1 and next_idx < end_idx:
-                            end_idx = next_idx
-
-                content = text[start_idx:end_idx].strip()
-                result[section] = content
+            content = text[start_idx:end_idx].strip()
+            result[section] = content
 
         return result
     
@@ -768,4 +776,3 @@ Return valid JSON with exactly: title, description, examples, solution, tests.""
 
 
 generation_service = GenerationService()
-

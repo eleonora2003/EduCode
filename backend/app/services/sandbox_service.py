@@ -242,6 +242,22 @@ def _normalize_java_tests(test_code: str) -> str:
     return _java_default_imports(code)
 
 
+def _find_first_matching_line(logs: str, patterns: list[str]) -> str | None:
+    """Find and return the first line containing any of the given patterns."""
+    for line in logs.split("\n"):
+        if any(pattern in line for pattern in patterns):
+            return line.strip()[:500]
+    return None
+
+
+def _get_meaningful_lines(text: str, max_lines: int = 6) -> str:
+    """Extract non-empty lines from text, up to max_lines."""
+    meaningful = [line for line in text.split("\n") if line.strip()]
+    if meaningful:
+        return "\n".join(meaningful[:max_lines])[:500]
+    return ""
+
+
 def summarize_validation_failure(logs: str, language: str = "Python") -> str:
     if not logs or logs.strip() == NO_OUTPUT_RECEIVED:
         return "Validation failed with no output from the sandbox."
@@ -250,33 +266,36 @@ def summarize_validation_failure(logs: str, language: str = "Python") -> str:
         detail = logs[len("Compilation failed:"):].strip()
         return detail.split("\n")[0][:500] or "Java compilation failed."
 
-    if "AssertionError" in logs:
-        for line in logs.split("\n"):
-            if "AssertionError" in line:
-                return line.strip()[:500]
+    # Check for AssertionError
+    assertion_line = _find_first_matching_line(logs, ["AssertionError"])
+    if assertion_line:
+        return assertion_line
 
-    if "SyntaxError" in logs:
-        for line in logs.split("\n"):
-            if "SyntaxError" in line or "File " in line:
-                return line.strip()[:500]
+    # Check for SyntaxError
+    syntax_line = _find_first_matching_line(logs, ["SyntaxError", "File "])
+    if syntax_line:
+        return syntax_line
 
-    if "Exception in thread" in logs or "Exception:" in logs:
-        for line in logs.split("\n"):
-            if "Exception" in line:
-                return line.strip()[:500]
+    # Check for Exceptions
+    exception_line = _find_first_matching_line(logs, ["Exception"])
+    if exception_line:
+        return exception_line
 
+    # Check for STDERR output
     if "STDERR:" in logs:
         stderr = logs.split("STDERR:", 1)[1].strip()
-        meaningful = [line for line in stderr.split("\n") if line.strip()]
-        if meaningful:
-            return "\n".join(meaningful[:5])[:500]
+        stderr_content = _get_meaningful_lines(stderr, max_lines=5)
+        if stderr_content:
+            return stderr_content
 
+    # Check for Error: prefix
     if logs.startswith("Error:"):
         return logs.split("\n")[0][:500]
 
-    meaningful = [line for line in logs.split("\n") if line.strip()]
-    if meaningful:
-        return "\n".join(meaningful[:6])[:500]
+    # Return first meaningful lines from logs
+    meaningful_content = _get_meaningful_lines(logs, max_lines=6)
+    if meaningful_content:
+        return meaningful_content
 
     return f"{language} validation failed. See full logs for details."
 
