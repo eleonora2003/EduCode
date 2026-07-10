@@ -249,7 +249,7 @@ class TestGenerationServiceGetTemplateInstructions:
         with patch('app.services.generation_service.OpenAI'):
             service = GenerationService()
             
-            instructions = service._get_template_instructions("Default Template", "Python")
+            instructions = service._get_template_instructions("Default Template")
             
             assert "standard programming exercise" in instructions
     
@@ -258,7 +258,7 @@ class TestGenerationServiceGetTemplateInstructions:
         with patch('app.services.generation_service.OpenAI'):
             service = GenerationService()
             
-            instructions = service._get_template_instructions("Algorithm Challenge", "Python")
+            instructions = service._get_template_instructions("Algorithm Challenge")
             
             assert "algorithmic thinking" in instructions
             assert "time/space complexity" in instructions
@@ -268,7 +268,7 @@ class TestGenerationServiceGetTemplateInstructions:
         with patch('app.services.generation_service.OpenAI'):
             service = GenerationService()
             
-            instructions = service._get_template_instructions("Data Structure Practice", "Python")
+            instructions = service._get_template_instructions("Data Structure Practice")
             
             assert "data structure" in instructions.lower()
     
@@ -277,7 +277,7 @@ class TestGenerationServiceGetTemplateInstructions:
         with patch('app.services.generation_service.OpenAI'):
             service = GenerationService()
             
-            instructions = service._get_template_instructions("Real-World Problem", "Python")
+            instructions = service._get_template_instructions("Real-World Problem")
             
             assert "real-world" in instructions
             assert "practical" in instructions
@@ -287,7 +287,7 @@ class TestGenerationServiceGetTemplateInstructions:
         with patch('app.services.generation_service.OpenAI'):
             service = GenerationService()
             
-            instructions = service._get_template_instructions("Code Optimization", "Python")
+            instructions = service._get_template_instructions("Code Optimization")
             
             assert "optimization" in instructions.lower()
             assert "naive approach" in instructions.lower()
@@ -297,7 +297,7 @@ class TestGenerationServiceGetTemplateInstructions:
         with patch('app.services.generation_service.OpenAI'):
             service = GenerationService()
             
-            instructions = service._get_template_instructions("Unknown", "Python")
+            instructions = service._get_template_instructions("Unknown")
             
             assert "standard programming exercise" in instructions
 

@@ -327,7 +327,7 @@ ${codeTemplate}`;
                 <h3>Review & Save</h3>
                 <p className="form-subtitle">Review your template before saving</p>
 
-                <div style={{ background: "#fff8e6", padding: 18, borderRadius: 8 }}>
+                <div style={{ background: 'var(--bg)', padding: 18, borderRadius: 8 }}>
                   <p>
                     <strong>Template Name</strong>
                     <br />

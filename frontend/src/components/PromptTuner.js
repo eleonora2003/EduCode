@@ -129,15 +129,26 @@ export default function PromptTuner({
     }
   }, [open]);
 
+  useEffect(() => {
+    const handleSelectionChange = () => {
+      const selection = window.getSelection();
+      if (!selection || selection.isCollapsed) return;
+      if (!contentRef.current?.contains(selection.anchorNode)) return;
+
+      const text = selection.toString().trim();
+      if (text) {
+        setSelectedText(text);
+      }
+    };
+
+    document.addEventListener("selectionchange", handleSelectionChange);
+    return () => {
+      document.removeEventListener("selectionchange", handleSelectionChange);
+    };
+  }, []);
+
   const handleOverlayClick = (e) => {
     if (e.target === e.currentTarget) {
-      closeTuner();
-    }
-  };
-
-  const handleOverlayKeyDown = (e) => {
-    if (e.key === "Enter" || e.key === " ") {
-      e.preventDefault();
       closeTuner();
     }
   };
@@ -158,25 +169,22 @@ export default function PromptTuner({
         </button>
       </div>
 
-      <div
+      <section
         ref={contentRef}
         className={`prompt-tuner-content${codeBlock ? " prompt-tuner-code" : ""}`}
-        onMouseUp={captureSelection}
-        onKeyUp={captureSelection}
-        role="region"
         aria-label={`${FIELD_LABELS[field]} content area`}
       >
         {children}
-      </div>
+      </section>
 
       {open && (
         <div
           className="prompt-tuner-overlay"
           onClick={handleOverlayClick}
-          onKeyDown={handleOverlayKeyDown}
-          role="presentation"
+          onKeyDown={(e) => {
+            if (e.key === "Escape") closeTuner();
+          }}
           aria-hidden="true"
-          tabIndex={-1}
         >
           <dialog
             ref={modalRef}
