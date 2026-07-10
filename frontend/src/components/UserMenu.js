@@ -113,15 +113,23 @@ export default function UserMenu({
             <div className="user-dropdown-divider" />
             <button type="button" className="user-dropdown-item danger" role="menuitem" onClick={() => { onClose(); onLogout(); }}>
               <span className="user-dropdown-icon"><IconLogout /></span>
-              Sign Out
+              <span>Sign Out</span>
             </button>
           </div>
         )}
       </div>
 
       {overlay === "profile" && (
-        <div className="profile-overlay" onClick={() => setOverlay(null)}>
-          <div className="profile-panel" onClick={(e) => e.stopPropagation()} role="dialog">
+        <button
+          type="button"
+          className="profile-overlay"
+          onClick={() => setOverlay(null)}
+          aria-label="Close profile panel"
+        >
+          <dialog
+            className="profile-panel"
+            open
+          >
             <div className="profile-panel-header">
               <h2>My Profile</h2>
               <button type="button" className="profile-close" onClick={() => setOverlay(null)} aria-label="Close">
@@ -147,8 +155,8 @@ export default function UserMenu({
                 <span className="profile-detail-value">{user?.email || "—"}</span>
               </div>
             </div>
-          </div>
-        </div>
+          </dialog>
+        </button>
       )}
 
       {overlay === "preferences" && (
@@ -166,8 +174,16 @@ function PreferencesPanel({ theme, onThemeChange, onClose }) {
   const { openPreferencesModal } = useCookieConsent();
 
   return (
-    <div className="profile-overlay" onClick={onClose}>
-      <div className="profile-panel" onClick={(e) => e.stopPropagation()} role="dialog">
+    <button
+      type="button"
+      className="profile-overlay"
+      onClick={onClose}
+      aria-label="Close preferences panel"
+    >
+      <dialog
+        className="profile-panel"
+        open
+      >
         <div className="profile-panel-header">
           <h2>Preferences</h2>
           <button type="button" className="profile-close" onClick={onClose} aria-label="Close">
@@ -182,16 +198,14 @@ function PreferencesPanel({ theme, onThemeChange, onClose }) {
               className={`theme-option ${theme === "light" ? "active" : ""}`}
               onClick={() => onThemeChange("light")}
             >
-              <span className="theme-swatch light" />
-              Light
+              <span className="theme-swatch light" />Light
             </button>
             <button
               type="button"
               className={`theme-option ${theme === "dark" ? "active" : ""}`}
               onClick={() => onThemeChange("dark")}
             >
-              <span className="theme-swatch dark" />
-              Dark
+              <span className="theme-swatch dark" />Dark
             </button>
           </div>
         </div>
@@ -214,7 +228,7 @@ function PreferencesPanel({ theme, onThemeChange, onClose }) {
             Cookie Preferences
           </button>
         </div>
-      </div>
-    </div>
+      </dialog>
+    </button>
   );
 }
