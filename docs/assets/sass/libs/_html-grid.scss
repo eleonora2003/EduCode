@@ -40,7 +40,7 @@
 				}
 
 		// Row.
-			&.row {
+			@at-root #{selector-append("&", ".row")} {
 				display: flex;
 				flex-wrap: wrap;
 				box-sizing: border-box;
