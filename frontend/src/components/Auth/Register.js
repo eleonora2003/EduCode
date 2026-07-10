@@ -185,7 +185,7 @@ export default function Register() {
             {loading ? (
               <>
                 <span className="spinner" />
-                Creating account...
+                <span>Creating account...</span>
               </>
             ) : (
               'Create Account'
