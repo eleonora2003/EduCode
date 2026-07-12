@@ -59,10 +59,10 @@ export default function GenerateTask({ task, setTask, onNavigate }) {
   };
 
   const exerciseCountOptions = [
-    { count: 2, label: "2 exercises", desc: "Quick warm-up + one harder challenge" },
-    { count: 3, label: "3 exercises", desc: "Classic lesson arc — easy to hard (recommended)" },
-    { count: 4, label: "4 exercises", desc: "Longer practice with a gradual ramp-up" },
-    { count: 5, label: "5 exercises", desc: "Full workshop — lots of progressive practice" },
+    { count: 2, label: "Exercises", desc: "Quick warm-up + one harder challenge" },
+    { count: 3, label: "Exercises", desc: "Classic lesson arc — easy to hard (recommended)" },
+    { count: 4, label: "Exercises", desc: "Longer practice with a gradual ramp-up" },
+    { count: 5, label: "Exercises", desc: "Full workshop — lots of progressive practice" },
   ];
 
   const seriesDifficultyPreview = (count) => {

@@ -3,7 +3,7 @@ import { tasksAPI, exportAPI } from "../api/client";
 export default function Export({ onNavigate }) {
   const [tasks, setTasks] = useState([]);
   const [selectedTasks, setSelectedTasks] = useState([]);
-  const [exportFormat, setExportFormat] = useState("markdown");
+  const [exportFormat, setExportFormat] = useState("pdf");
   const [loading, setLoading] = useState(true);
   const [exporting, setExporting] = useState(false);
 
@@ -125,8 +125,8 @@ export default function Export({ onNavigate }) {
               value={exportFormat} 
               onChange={(e) => setExportFormat(e.target.value)}
             >
-              <option value="markdown">Markdown (.md)</option>
               <option value="pdf">PDF Document (.pdf)</option>
+              <option value="markdown">Markdown (.md)</option>
               <option value="moodle_xml">Moodle XML (.xml)</option>
               <option value="docx">Word Document (.docx)</option>
             </select>
@@ -228,7 +228,7 @@ export default function Export({ onNavigate }) {
       <div className="form-card" style={{ marginTop: '24px' }}>
         <h3>Export Format Information</h3>
         {exportFormat === "markdown" && (
-          <div style={{ lineHeight: '1.6', color: '#374151' }}>
+          <div style={{ lineHeight: '1.6', color: 'var(--text-secondary)' }}>
             <p><strong>Markdown (.md)</strong> - A lightweight markup format perfect for:</p>
             <ul style={{ marginLeft: '20px', marginTop: '8px' }}>
               <li>GitHub repositories</li>
@@ -239,7 +239,7 @@ export default function Export({ onNavigate }) {
           </div>
         )}
         {exportFormat === "pdf" && (
-          <div style={{ lineHeight: '1.6', color: '#374151' }}>
+          <div style={{ lineHeight: '1.6', color: 'var(--text-secondary)' }}>
             <p><strong>PDF Document (.pdf)</strong> - Professional format ideal for:</p>
             <ul style={{ marginLeft: '20px', marginTop: '8px' }}>
               <li>Printing physical copies</li>
@@ -250,7 +250,7 @@ export default function Export({ onNavigate }) {
           </div>
         )}
         {exportFormat === "moodle_xml" && (
-          <div style={{ lineHeight: '1.6', color: '#374151' }}>
+          <div style={{ lineHeight: '1.6', color: 'var(--text-secondary)' }}>
             <p><strong>Moodle XML (.xml)</strong> - Import directly into Moodle LMS:</p>
             <ul style={{ marginLeft: '20px', marginTop: '8px' }}>
               <li>Import as essay questions</li>
@@ -261,7 +261,7 @@ export default function Export({ onNavigate }) {
           </div>
         )}
         {exportFormat === "docx" && (
-          <div style={{ lineHeight: '1.6', color: '#374151' }}>
+          <div style={{ lineHeight: '1.6', color: 'var(--text-secondary)' }}>
             <p><strong>Word Document (.docx)</strong> - Professional editable document format:</p>
             <ul style={{ marginLeft: '20px', marginTop: '8px' }}>
               <li>Fully editable in Microsoft Word</li>

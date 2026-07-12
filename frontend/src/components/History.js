@@ -1,5 +1,38 @@
 import { useState, useEffect } from "react";
-import { tasksAPI, exportAPI } from "../api/client";
+import { tasksAPI } from "../api/client";
+
+const ActionIcon = ({ type }) => {
+  const iconProps = { width: 18, height: 18, viewBox: "0 0 24 24", fill: "none", xmlns: "http://www.w3.org/2000/svg" };
+
+  switch (type) {
+    case "validate":
+      return (
+        <svg {...iconProps}>
+          <path d="M12 21c4.97 0 9-4.03 9-9V5.5L12 2 3 5.5V12c0 4.97 4.03 9 9 9Z" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" />
+          <path d="m9.5 12.5 2 2 4-4" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" />
+        </svg>
+      );
+    case "export":
+      return (
+        <svg {...iconProps}>
+          <path d="M12 3v13" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" />
+          <path d="m8 9 4-4 4 4" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" />
+          <path d="M5 21h14" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" />
+        </svg>
+      );
+    case "trash":
+      return (
+        <svg {...iconProps}>
+          <path d="M4 7h16" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" />
+          <path d="M9 7V4.5A1.5 1.5 0 0 1 10.5 3h3A1.5 1.5 0 0 1 15 4.5V7" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" />
+          <path d="M6 7h12l-1 13.5a1.5 1.5 0 0 1-1.5 1.5h-7a1.5 1.5 0 0 1-1.5-1.5L6 7Z" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" />
+          <path d="M10 11v6M14 11v6" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" />
+        </svg>
+      );
+    default:
+      return null;
+  }
+};
 
 export default function History({ onNavigate }) {
   const [tasks, setTasks] = useState([]);
@@ -67,30 +100,6 @@ export default function History({ onNavigate }) {
       onNavigate("validation");
     } else {
       console.warn("onNavigate prop is missing");
-    }
-  };
-
-  const exportTask = async (taskId, format) => {
-    try {
-      let response;
-      if (format === "pdf") {
-        response = await exportAPI.exportTaskPdf(taskId);
-      } else {
-        response = await exportAPI.exportTaskMarkdown(taskId);
-      }
-      
-      const blob = new Blob([response.data], { 
-        type: format === "pdf" ? "application/pdf" : "text/markdown" 
-      });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `task_${taskId}.${format === "pdf" ? "pdf" : "md"}`;
-      a.click();
-      URL.revokeObjectURL(url);
-    } catch (err) {
-      console.error("Export error:", err);
-      alert("Export failed. Please try again.");
     }
   };
 
@@ -247,35 +256,30 @@ export default function History({ onNavigate }) {
                   </td>
                   <td>{formatDate(task.created_at)}</td>
                   <td>
-                    <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+                    <div className="table-actions">
                       <button
-                        className="link-view"
+                        className="action-icon-btn"
                         onClick={() => validateTask(task)}
                         title="Validate Solution"
+                        aria-label="Validate Solution"
                       >
-                        Validate
+                        <ActionIcon type="validate" />
                       </button>
-                      <button 
-                        className="link-view"
-                        onClick={() => exportTask(task.id, 'markdown')}
-                        title="Export as Markdown"
+                      <button
+                        className="action-icon-btn"
+                        onClick={() => onNavigate?.("export")}
+                        title="Export Task"
+                        aria-label="Export Task"
                       >
-                        MD
+                        <ActionIcon type="export" />
                       </button>
-                      <button 
-                        className="link-view"
-                        onClick={() => exportTask(task.id, 'pdf')}
-                        title="Export as PDF"
-                      >
-                        PDF
-                      </button>
-                      <button 
-                        className="link-view"
-                        style={{ color: '#ef4444' }}
+                      <button
+                        className="action-icon-btn danger"
                         onClick={() => deleteTask(task.id)}
                         title="Delete Task"
+                        aria-label="Delete Task"
                       >
-                        Delete
+                        <ActionIcon type="trash" />
                       </button>
                     </div>
                   </td>

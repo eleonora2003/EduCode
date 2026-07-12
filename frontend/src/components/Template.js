@@ -19,6 +19,38 @@ export default function Template({ onNavigate, aiTemplateDraft, onDraftConsumed 
   const [saveMessage, setSaveMessage] = useState("");
   const [stepError, setStepError] = useState("");
 
+  const getSaveMessageVariant = (message) => {
+    if (/fail/i.test(message)) return "error";
+    if (/saving/i.test(message)) return "info";
+    if (/saved|success/i.test(message)) return "success";
+    return "info";
+  };
+
+  const saveMessageIcon = (variant) => {
+    if (variant === "success") {
+      return (
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M12 21c4.97 0 9-4.03 9-9V5.5L12 2 3 5.5V12c0 4.97 4.03 9 9 9Z" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" />
+          <path d="m9.5 12.5 2 2 4-4" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" />
+        </svg>
+      );
+    }
+    if (variant === "error") {
+      return (
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <circle cx="12" cy="12" r="9" stroke="currentColor" strokeWidth="1.7" />
+          <path d="M12 8v5" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" />
+          <circle cx="12" cy="16" r="1" fill="currentColor" />
+        </svg>
+      );
+    }
+    return (
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className="ai-spinner-icon">
+        <path d="M21 12a9 9 0 1 1-3.5-7.13" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" />
+      </svg>
+    );
+  };
+
   const steps = [
     "Basic Information",
     "Learning Goals",
@@ -374,9 +406,10 @@ ${codeTemplate}`;
         </div>
 
         {stepError && (
-          <p style={{ marginTop: 12, color: "#b91c1c", textAlign: "center" }}>
-            {stepError}
-          </p>
+          <div className="status-message error" style={{ justifyContent: "center" }}>
+            {saveMessageIcon("error")}
+            <span>{stepError}</span>
+          </div>
         )}
 
         {step === steps.length - 1 && (
@@ -390,7 +423,10 @@ ${codeTemplate}`;
             </button>
 
             {saveMessage && (
-              <p style={{ marginTop: 12, color: "#374151" }}>{saveMessage}</p>
+              <div className={`status-message ${getSaveMessageVariant(saveMessage)}`}>
+                {saveMessageIcon(getSaveMessageVariant(saveMessage))}
+                <span>{saveMessage}</span>
+              </div>
             )}
           </div>
         )}

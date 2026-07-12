@@ -1,6 +1,35 @@
 import { useEffect, useState } from "react";
 import { tasksAPI, validationAPI } from "../api/client";
 
+const VIcon = ({ type }) => {
+  const p = { width: 16, height: 16, viewBox: "0 0 24 24", fill: "none", xmlns: "http://www.w3.org/2000/svg" };
+  if (type === "validate") {
+    return (
+      <svg {...p}>
+        <path d="M12 21c4.97 0 9-4.03 9-9V5.5L12 2 3 5.5V12c0 4.97 4.03 9 9 9Z" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" />
+        <path d="m9.5 12.5 2 2 4-4" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" />
+      </svg>
+    );
+  }
+  if (type === "passed") {
+    return (
+      <svg {...p} width="20" height="20">
+        <circle cx="12" cy="12" r="9" stroke="currentColor" strokeWidth="1.7" />
+        <path d="m8.5 12.5 2.2 2.2 4.8-4.8" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" />
+      </svg>
+    );
+  }
+  if (type === "failed") {
+    return (
+      <svg {...p} width="20" height="20">
+        <circle cx="12" cy="12" r="9" stroke="currentColor" strokeWidth="1.7" />
+        <path d="m9 9 6 6M15 9l-6 6" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" />
+      </svg>
+    );
+  }
+  return null;
+};
+
 export default function Validation({ onNavigate }) {
   const [tasks, setTasks] = useState([]);
   const [selectedTaskId, setSelectedTaskId] = useState(null);
@@ -143,6 +172,19 @@ export default function Validation({ onNavigate }) {
     setStatusMessage(message);
   };
 
+  const getStatusVariant = (message) => {
+    if (/fail/i.test(message)) return "error";
+    if (/passed/i.test(message)) return "success";
+    return "info";
+  };
+
+  const getStatusIcon = (variant, message) => {
+    if (variant === "success") return <VIcon type="passed" />;
+    if (variant === "error") return <VIcon type="failed" />;
+    if (/running|sending|\.\.\.$/i.test(message)) return <span className="table-inline-spinner" />;
+    return <VIcon type="validate" />;
+  };
+
   const getStatusBadge = (status) => {
     if (status === "passed") return "badge badge-passed";
     if (status === "failed") return "badge badge-failed";
@@ -248,14 +290,20 @@ export default function Validation({ onNavigate }) {
                     <td>
                       <button
                         type="button"
-                        className="link-view"
+                        className="action-icon-btn"
                         onClick={(event) => {
                           event.stopPropagation();
                           runValidation(task.id, true);
                         }}
                         disabled={loadingTaskId === task.id}
+                        title="Run Validation"
+                        aria-label="Run Validation"
                       >
-                        {loadingTaskId === task.id ? "Running..." : "Validate"}
+                        {loadingTaskId === task.id ? (
+                          <span className="table-inline-spinner" />
+                        ) : (
+                          <VIcon type="validate" />
+                        )}
                       </button>
                     </td>
                   </tr>
@@ -315,7 +363,10 @@ export default function Validation({ onNavigate }) {
               </div>
 
               {statusMessage && (
-                <div className="validation-status-banner">{statusMessage}</div>
+                <div className={`status-message ${getStatusVariant(statusMessage)}`}>
+                  {getStatusIcon(getStatusVariant(statusMessage), statusMessage)}
+                  <span>{statusMessage}</span>
+                </div>
               )}
 
               {displayResult && (
@@ -329,6 +380,9 @@ export default function Validation({ onNavigate }) {
                   >
                     <div className="validation-result-label">Result</div>
                     <div className="validation-result-value">
+                      <span className={`validation-result-icon ${displayResult.passed ? "icon-passed" : "icon-failed"}`}>
+                        <VIcon type={displayResult.passed ? "passed" : "failed"} />
+                      </span>
                       {displayResult.passed ? "Passed" : "Failed"}
                     </div>
                     <div className="validation-result-sub">
