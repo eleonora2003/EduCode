@@ -162,44 +162,65 @@ export default function Validation({ onNavigate }) {
 
   return (
     <div className="page-content">
-      <div className="page-header">
+      <div className="page-header validation-page-header">
         <div>
+          <span className="validation-eyebrow">Quality assurance</span>
           <h2>Validation Dashboard</h2>
-          <p>Run sandbox tests, inspect failures, and rewrite broken code with AI</p>
+          <p>Run sandbox tests, inspect failures, and rewrite broken code with AI.</p>
+        </div>
+        <div className="validation-header-summary" aria-label="Validation summary">
+          <span>{stats.passed + stats.failed} reviewed</span>
+          <span>{stats.pending} awaiting validation</span>
         </div>
       </div>
 
-      <div className="stats-grid">
+      <div className="stats-grid validation-stats-grid">
         <div className="stat-card">
-          <div className="stat-label">Total Tasks</div>
+          <div className="stat-card-topline">
+            <div className="stat-label">Total Tasks</div>
+            <span className="stat-index">01</span>
+          </div>
           <div className="stat-value">{stats.total}</div>
+          <div className="stat-caption">Tasks in the validation queue</div>
         </div>
 
         <div className="stat-card">
-          <div className="stat-label">Passed</div>
-          <div className="stat-value" style={{ color: "#22c55e" }}>
-            {stats.passed}
+          <div className="stat-card-topline">
+            <div className="stat-label">Passed</div>
+            <span className="stat-index">02</span>
           </div>
+          <div className="stat-value" style={{ color: "#22c55e" }}>{stats.passed}</div>
+          <div className="stat-caption">Completed without test failures</div>
         </div>
 
         <div className="stat-card">
-          <div className="stat-label">Failed</div>
-          <div className="stat-value" style={{ color: "#ef4444" }}>
-            {stats.failed}
+          <div className="stat-card-topline">
+            <div className="stat-label">Failed</div>
+            <span className="stat-index">03</span>
           </div>
+          <div className="stat-value" style={{ color: "#ef4444" }}>{stats.failed}</div>
+          <div className="stat-caption">Require review or an AI fix</div>
         </div>
 
         <div className="stat-card">
-          <div className="stat-label">Pending</div>
-          <div className="stat-value" style={{ color: "#f59e0b" }}>
-            {stats.pending}
+          <div className="stat-card-topline">
+            <div className="stat-label">Pending</div>
+            <span className="stat-index">04</span>
           </div>
+          <div className="stat-value" style={{ color: "#f59e0b" }}>{stats.pending}</div>
+          <div className="stat-caption">Not yet fully validated</div>
         </div>
       </div>
 
       <div className="validation-layout">
         <div className="table-card validation-task-list">
-          <h3>Tasks</h3>
+          <div className="validation-section-heading">
+            <div>
+              <span className="validation-section-kicker">Queue</span>
+              <h3>Tasks</h3>
+            </div>
+            <span className="validation-task-count">{tasks.length} total</span>
+          </div>
 
           {tasks.length === 0 ? (
             <button
@@ -232,8 +253,13 @@ export default function Validation({ onNavigate }) {
                     }
                     onClick={() => selectTask(task)}
                   >
-                    <td>{task.title}</td>
-                    <td>{task.language}</td>
+                    <td>
+                      <div className="validation-task-name">
+                        <span className="validation-task-title">{task.title}</span>
+                        <span className="validation-task-id">Task #{task.id}</span>
+                      </div>
+                    </td>
+                    <td><span className="validation-language">{task.language}</span></td>
                     <td>
                       <span className={getStatusBadge(task.status)}>
                         {task.status || "pending"}
@@ -265,6 +291,8 @@ export default function Validation({ onNavigate }) {
         <div className="validation-detail-panel">
           {!selectedTask ? (
             <div className="validation-empty-panel">
+              <div className="validation-empty-icon"><VIcon type="validate" /></div>
+              <span className="validation-section-kicker">Inspector</span>
               <h3>Validation Details</h3>
               <p>Select a task to inspect results or run validation.</p>
             </div>
@@ -272,6 +300,7 @@ export default function Validation({ onNavigate }) {
             <>
               <div className="validation-detail-header">
                 <div>
+                  <span className="validation-section-kicker">Selected task</span>
                   <h3>{selectedTask.title}</h3>
                   <div className="validation-detail-meta">
                     <span className={getDifficultyBadge(selectedTask.difficulty)}>

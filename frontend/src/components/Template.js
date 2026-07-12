@@ -188,12 +188,16 @@ ${codeTemplate}`;
       </div>
 
       <div className="hero-panel template-hero">
-        <div>
+        <div className="template-hero-content">
+          <div className="template-hero-badge">Reusable lesson builder</div>
           <h3>Build templates for consistent lessons</h3>
           <p>Use templates when you want tasks to follow a familiar format, include learning goals, and reuse starter code across assignments.</p>
         </div>
-        <div>
-          <strong>Tip:</strong> Click any step above to jump between setup stages. This wizard keeps your template creation fast and interactive.
+        <div className="template-hero-tip">
+          <div className="template-hero-tip-icon">✦</div>
+          <div>
+            <strong>Tip:</strong> Click any step above to jump between setup stages. This wizard keeps your template creation fast and interactive.
+          </div>
         </div>
       </div>
 
@@ -219,11 +223,10 @@ ${codeTemplate}`;
             ‹
           </button>
 
-          <div style={{ padding: 8 }}>
+          <div className="template-step-content">
             {step === 0 && (
               <div>
                 <h3>Basic Information</h3>
-                <p className="form-subtitle">Set up template name and programming language</p>
 
                 <div className="form-group">
                   <label htmlFor="template-name">Template Name</label>
@@ -274,7 +277,6 @@ ${codeTemplate}`;
             {step === 1 && (
               <div>
                 <h3>Learning Goals</h3>
-                <p className="form-subtitle">Define what students should learn</p>
 
                 <div className="form-group">
                   <label htmlFor="learning-goals">Learning Goals</label>
@@ -291,7 +293,6 @@ ${codeTemplate}`;
             {step === 2 && (
               <div>
                 <h3>Restrictions</h3>
-                <p className="form-subtitle">Add constraints and limitations</p>
 
                 <div className="form-group">
                   <label htmlFor="restrictions">Restrictions</label>
@@ -308,7 +309,6 @@ ${codeTemplate}`;
             {step === 3 && (
               <div>
                 <h3>Code Template</h3>
-                <p className="form-subtitle">Define the starter code structure</p>
 
                 <div className="form-group">
                   <label htmlFor="code-template">Code Structure Template</label>
@@ -325,9 +325,8 @@ ${codeTemplate}`;
             {step === 4 && (
               <div>
                 <h3>Review & Save</h3>
-                <p className="form-subtitle">Review your template before saving</p>
 
-                <div style={{ background: 'var(--bg)', padding: 18, borderRadius: 8 }}>
+                <div className="template-review-box">
                   <p>
                     <strong>Template Name</strong>
                     <br />
@@ -418,7 +417,7 @@ ${codeTemplate}`;
           )}
         </div>
 
-        <div style={{ display: "flex", gap: 8 }}>
+        <div className="template-item-actions">
           <button
             className="btn-edit"
             type="button"
