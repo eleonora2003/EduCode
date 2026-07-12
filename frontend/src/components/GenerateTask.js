@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { tasksAPI, templatesAPI } from "../api/client";
+import { tasksAPI, templatesAPI, exportAPI } from "../api/client";
 import { IconBook, IconSpark, IconPython, IconJava } from "./icons";
 import PromptTuner from "./PromptTuner";
 
@@ -393,8 +393,10 @@ export default function GenerateTask({ task, setTask, onNavigate }) {
 
     setIsSavingSeries(true);
     try {
-      for (const ex of exerciseSeries.exercises) {
-        await tasksAPI.create({
+      const savedExercises = [...exerciseSeries.exercises];
+      for (let i = 0; i < savedExercises.length; i++) {
+        const ex = savedExercises[i];
+        const res = await tasksAPI.create({
           title: ex.title,
           description: ex.description,
           language: exerciseSeries.language,
@@ -405,7 +407,11 @@ export default function GenerateTask({ task, setTask, onNavigate }) {
           solution: ex.solution,
           tests: ex.tests,
         });
+        // Store the returned task ID in the exercise
+        savedExercises[i] = { ...ex, id: res.data.id };
       }
+      // Update exerciseSeries with the saved IDs
+      setExerciseSeries({ ...exerciseSeries, exercises: savedExercises });
       setSeriesSaved(true);
     } catch (err) {
       console.error(err);
@@ -415,34 +421,57 @@ export default function GenerateTask({ task, setTask, onNavigate }) {
     }
   };
 
-  const exportSeriesMarkdown = () => {
+  const exportSeriesPdf = async () => {
     if (!exerciseSeries?.exercises?.length) return;
 
-    const parts = exerciseSeries.exercises.map((ex) => {
-      return [
-        `# ${ex.title}`,
-        "",
-        `**Difficulty:** ${ex.difficulty}`,
-        "",
-        ex.description,
-        "",
-        ex.examples ? `## Examples\n\n${ex.examples}` : "",
-        ex.solution ? `## Reference Solution\n\n\`\`\`${exerciseSeries.language.toLowerCase()}\n${ex.solution}\n\`\`\`` : "",
-        ex.tests ? `## Unit Tests\n\n\`\`\`${exerciseSeries.language.toLowerCase()}\n${ex.tests}\n\`\`\`` : "",
-        "",
-        "---",
-        "",
-      ].filter(Boolean).join("\n");
-    });
+    // If series is saved, use the saved task IDs
+    if (seriesSaved) {
+      try {
+        const response = await exportAPI.exportTasks({
+          task_ids: exerciseSeries.exercises.map(ex => ex.id).filter(Boolean),
+          format: "pdf"
+        });
+        
+        const blob = new Blob([response.data], { type: "application/pdf" });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = `${exerciseSeries.concept.replace(/\s+/g, "_")}_Exercise_Series.pdf`;
+        a.click();
+        URL.revokeObjectURL(url);
+      } catch (err) {
+        console.error("Export error:", err);
+        alert("Export failed. Please try again.");
+      }
+    } else {
+      // If not saved, save first then export
+      alert("Please save the exercise series first before exporting as PDF.");
+    }
+  };
 
-    const md = `# ${exerciseSeries.series_title}\n\n${parts.join("\n")}`;
-    const blob = new Blob([md], { type: "text/markdown" });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = `${exerciseSeries.concept.replace(/\s+/g, "_")}_Exercise_Series.md`;
-    a.click();
-    URL.revokeObjectURL(url);
+  const exportTaskPdf = async () => {
+    if (!generatedData) return;
+
+    // If task is saved, use the saved task ID
+    if (saved && taskId) {
+      try {
+        const response = await exportAPI.exportTaskPdf(taskId);
+        
+        const blob = new Blob([response.data], { type: "application/pdf" });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = `${generatedData.title.replace(/\s+/g, "_")}.pdf`;
+        a.click();
+        URL.revokeObjectURL(url);
+      } catch (err) {
+        console.error("Export error:", err);
+        alert("Export failed. Please try again.");
+      }
+    } else {
+      // If not saved, save first then export
+      alert("Please save the task first before exporting as PDF.");
+    }
   };
 
   const renderProgressBreadcrumb = (items) => (
@@ -1242,20 +1271,10 @@ export default function GenerateTask({ task, setTask, onNavigate }) {
 
             <button
               className="btn-secondary"
-              onClick={() => {
-                const md = `# ${generatedData.title}\n\n${generatedData.description}`;
-                const blob = new Blob([md], { type: "text/markdown" });
-                const url = URL.createObjectURL(blob);
-                const a = document.createElement("a");
-
-                a.href = url;
-                a.download = `${generatedData.title.replace(/\s+/g, "_")}.md`;
-                a.click();
-
-                URL.revokeObjectURL(url);
-              }}
+              onClick={exportTaskPdf}
+              disabled={!saved}
             >
-              Export
+              Export PDF
             </button>
           </div>
         </div>
@@ -1414,8 +1433,8 @@ export default function GenerateTask({ task, setTask, onNavigate }) {
             >
               {getSaveSeriesButtonText()}
             </button>
-            <button className="btn-secondary" onClick={exportSeriesMarkdown}>
-              Export Series (.md)
+            <button className="btn-secondary" onClick={exportSeriesPdf} disabled={!seriesSaved}>
+              Export Series PDF
             </button>
           </div>
         </div>

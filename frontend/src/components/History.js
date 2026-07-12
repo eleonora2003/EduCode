@@ -172,7 +172,7 @@ export default function History({ onNavigate }) {
       )}
 
       {/* Filters */}
-      <div className="form-card">
+      <div className="form-card-history">
         <div className="form-row">
           <div className="form-group">
             <label htmlFor="filter-language">Filter by Language</label>
@@ -203,7 +203,7 @@ export default function History({ onNavigate }) {
       </div>
 
       {/* Tasks List */}
-      <div className="table-card">
+      <div className="table-card-history">
         <h3>Your Tasks ({tasks.length})</h3>
         
         {tasks.length === 0 ? (

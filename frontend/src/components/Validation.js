@@ -33,6 +33,7 @@ const VIcon = ({ type }) => {
 export default function Validation({ onNavigate }) {
   const [tasks, setTasks] = useState([]);
   const [selectedTaskId, setSelectedTaskId] = useState(null);
+  const [expandedTaskId, setExpandedTaskId] = useState(null);
   const [validationResult, setValidationResult] = useState(null);
   const [stats, setStats] = useState({
     total: 0,
@@ -172,7 +173,12 @@ export default function Validation({ onNavigate }) {
     setStatusMessage(message);
   };
 
-  const getStatusVariant = (message) => {
+  const toggleExpandDetails = (taskId, event) => {
+    event.stopPropagation();
+    setExpandedTaskId(expandedTaskId === taskId ? null : taskId);
+  };
+
+    const getStatusVariant = (message) => {
     if (/fail/i.test(message)) return "error";
     if (/passed/i.test(message)) return "success";
     return "info";
@@ -207,44 +213,65 @@ export default function Validation({ onNavigate }) {
 
   return (
     <div className="page-content">
-      <div className="page-header">
+      <div className="page-header validation-page-header">
         <div>
+          <span className="validation-eyebrow">Quality assurance</span>
           <h2>Validation Dashboard</h2>
-          <p>Run sandbox tests, inspect failures, and rewrite broken code with AI</p>
+          <p>Run sandbox tests, inspect failures, and rewrite broken code with AI.</p>
+        </div>
+        <div className="validation-header-summary" aria-label="Validation summary">
+          <span>{stats.passed + stats.failed} reviewed</span>
+          <span>{stats.pending} awaiting validation</span>
         </div>
       </div>
 
-      <div className="stats-grid">
+      <div className="stats-grid validation-stats-grid">
         <div className="stat-card">
-          <div className="stat-label">Total Tasks</div>
+          <div className="stat-card-topline">
+            <div className="stat-label">Total Tasks</div>
+            <span className="stat-index">01</span>
+          </div>
           <div className="stat-value">{stats.total}</div>
+          <div className="stat-caption">Tasks in the validation queue</div>
         </div>
 
         <div className="stat-card">
-          <div className="stat-label">Passed</div>
-          <div className="stat-value" style={{ color: "#22c55e" }}>
-            {stats.passed}
+          <div className="stat-card-topline">
+            <div className="stat-label">Passed</div>
+            <span className="stat-index">02</span>
           </div>
+          <div className="stat-value" style={{ color: "#22c55e" }}>{stats.passed}</div>
+          <div className="stat-caption">Completed without test failures</div>
         </div>
 
         <div className="stat-card">
-          <div className="stat-label">Failed</div>
-          <div className="stat-value" style={{ color: "#ef4444" }}>
-            {stats.failed}
+          <div className="stat-card-topline">
+            <div className="stat-label">Failed</div>
+            <span className="stat-index">03</span>
           </div>
+          <div className="stat-value" style={{ color: "#ef4444" }}>{stats.failed}</div>
+          <div className="stat-caption">Require review or an AI fix</div>
         </div>
 
         <div className="stat-card">
-          <div className="stat-label">Pending</div>
-          <div className="stat-value" style={{ color: "#f59e0b" }}>
-            {stats.pending}
+          <div className="stat-card-topline">
+            <div className="stat-label">Pending</div>
+            <span className="stat-index">04</span>
           </div>
+          <div className="stat-value" style={{ color: "#f59e0b" }}>{stats.pending}</div>
+          <div className="stat-caption">Not yet fully validated</div>
         </div>
       </div>
 
       <div className="validation-layout">
         <div className="table-card validation-task-list">
-          <h3>Tasks</h3>
+          <div className="validation-section-heading">
+            <div>
+              <span className="validation-section-kicker">Queue</span>
+              <h3>Tasks</h3>
+            </div>
+            <span className="validation-task-count">{tasks.length} total</span>
+          </div>
 
           {tasks.length === 0 ? (
             <button
@@ -265,159 +292,172 @@ export default function Validation({ onNavigate }) {
                   <th>Status</th>
                   <th>Tests</th>
                   <th>Actions</th>
+                  <th>Details</th>
                 </tr>
               </thead>
 
               <tbody>
                 {tasks.map((task) => (
-                  <tr
-                    key={task.id}
-                    className={
-                      selectedTaskId === task.id ? "validation-row-selected" : ""
-                    }
-                    onClick={() => selectTask(task)}
-                  >
-                    <td>{task.title}</td>
-                    <td>{task.language}</td>
-                    <td>
-                      <span className={getStatusBadge(task.status)}>
-                        {task.status || "pending"}
-                      </span>
-                    </td>
-                    <td>
-                      {task.passed_tests || 0}/{task.total_tests || 0}
-                    </td>
-                    <td>
-                      <button
-                        type="button"
-                        className="action-icon-btn"
-                        onClick={(event) => {
-                          event.stopPropagation();
-                          runValidation(task.id, true);
-                        }}
-                        disabled={loadingTaskId === task.id}
-                        title="Run Validation"
-                        aria-label="Run Validation"
-                      >
-                        {loadingTaskId === task.id ? (
-                          <span className="table-inline-spinner" />
-                        ) : (
-                          <VIcon type="validate" />
-                        )}
-                      </button>
-                    </td>
-                  </tr>
+                  <>
+                    <tr
+                      key={task.id}
+                      className={
+                        selectedTaskId === task.id ? "validation-row-selected" : ""
+                      }
+                      onClick={() => selectTask(task)}
+                    >
+                      <td>
+                        <div className="validation-task-name">
+                          <span className="validation-task-title">{task.title}</span>
+                          <span className="validation-task-id">Task #{task.id}</span>
+                        </div>
+                      </td>
+                      <td><span className="validation-language">{task.language}</span></td>
+                      <td>
+                        <span className={getStatusBadge(task.status)}>
+                          {task.status || "pending"}
+                        </span>
+                      </td>
+                      <td>
+                        {task.passed_tests || 0}/{task.total_tests || 0}
+                      </td>
+                      <td>
+                        <button
+                          type="button"
+                          className="link-view"
+                          onClick={(event) => {
+                            event.stopPropagation();
+                            runValidation(task.id, true);
+                          }}
+                          disabled={loadingTaskId === task.id}
+                        >
+                          {loadingTaskId === task.id ? (
+                            <span className="table-inline-spinner" />
+                          ) : (
+                            <VIcon type="validate" />
+                          )}
+                        </button>
+                      </td>
+                      <td>
+                        <button
+                          type="button"
+                          className={`validation-details-toggle ${expandedTaskId === task.id ? 'expanded' : ''}`}
+                          onClick={(event) => toggleExpandDetails(task.id, event)}
+                          title="Toggle details"
+                        >
+                          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M6 9l6 6 6-6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                          </svg>
+                          <span>Details</span>
+                        </button>
+                      </td>
+                    </tr>
+                    {expandedTaskId === task.id && (
+                      <tr className="validation-details-row">
+                        <td colSpan="6">
+                          <div className="validation-details-content">
+                            <div className="validation-details-header">
+                              <div>
+                                <span className="validation-section-kicker">Task Details</span>
+                                <h4>{task.title}</h4>
+                                <div className="validation-detail-meta">
+                                  <span className={getDifficultyBadge(task.difficulty)}>
+                                    {task.difficulty}
+                                  </span>
+                                  <span>{task.language}</span>
+                                  {task.execution_time && (
+                                    <span>{task.execution_time}s</span>
+                                  )}
+                                </div>
+                              </div>
+                              <div className="validation-details-actions">
+                                <button
+                                  type="button"
+                                  className="btn-secondary"
+                                  onClick={(event) => {
+                                    event.stopPropagation();
+                                    runValidation(task.id, true);
+                                  }}
+                                  disabled={loadingTaskId === task.id}
+                                >
+                                  {loadingTaskId === task.id
+                                    ? "Running..."
+                                    : "Run Validation"}
+                                </button>
+                                {task.validation_result && !task.validation_result.passed && loadingTaskId !== task.id && fixingTaskId !== task.id && (
+                                  <button
+                                    type="button"
+                                    className="btn-primary"
+                                    onClick={(event) => {
+                                      event.stopPropagation();
+                                      fixWithAI(task.id);
+                                    }}
+                                    disabled={fixingTaskId === task.id}
+                                  >
+                                    {fixingTaskId === task.id
+                                      ? "Rewriting..."
+                                      : "Fix with AI"}
+                                  </button>
+                                )}
+                              </div>
+                            </div>
+
+                            {task.validation_result ? (
+                              <div className="validation-results-grid">
+                                <div
+                                  className={`validation-result-card ${
+                                    task.validation_result.passed
+                                      ? "validation-result-passed"
+                                      : "validation-result-failed"
+                                  }`}
+                                >
+                                  <div className="validation-result-label">Result</div>
+                                  <div className="validation-result-value">
+                                    <span className={`validation-result-icon ${task.validation_result.passed ? "icon-passed" : "icon-failed"}`}>
+                                      <VIcon type={task.validation_result.passed ? "passed" : "failed"} />
+                                    </span>
+                                    {task.validation_result.passed ? "Passed" : "Failed"}
+                                  </div>
+                                  <div className="validation-result-sub">
+                                    {task.validation_result.passed_tests || 0}/
+                                    {task.validation_result.total_tests || 0} tests
+                                  </div>
+                                </div>
+
+                                {!task.validation_result.passed && task.validation_result.failure_reason && (
+                                  <div className="validation-result-card validation-result-failed">
+                                    <div className="validation-result-label">Why it failed</div>
+                                    <pre className="validation-failure-reason">
+                                      {task.validation_result.failure_reason}
+                                    </pre>
+                                  </div>
+                                )}
+                              </div>
+                            ) : (
+                              <div className="validation-no-result">
+                                <VIcon type="validate" />
+                                <span>No validation results yet. Run validation to see results.</span>
+                              </div>
+                            )}
+
+                            {task.validation_result?.logs && (
+                              <div className="logs-card validation-logs-card">
+                                <h3>Full Execution Logs</h3>
+                                <pre>{task.validation_result.logs}</pre>
+                              </div>
+                            )}
+                          </div>
+                        </td>
+                      </tr>
+                    )}
+                  </>
                 ))}
               </tbody>
             </table>
           )}
         </div>
 
-        <div className="validation-detail-panel">
-          {!selectedTask ? (
-            <div className="validation-empty-panel">
-              <h3>Validation Details</h3>
-              <p>Select a task to inspect results or run validation.</p>
-            </div>
-          ) : (
-            <>
-              <div className="validation-detail-header">
-                <div>
-                  <h3>{selectedTask.title}</h3>
-                  <div className="validation-detail-meta">
-                    <span className={getDifficultyBadge(selectedTask.difficulty)}>
-                      {selectedTask.difficulty}
-                    </span>
-                    <span>{selectedTask.language}</span>
-                    {selectedTask.execution_time && (
-                      <span>{selectedTask.execution_time}s</span>
-                    )}
-                  </div>
-                </div>
-
-                <div className="validation-detail-actions">
-                  <button
-                    type="button"
-                    className="btn-secondary"
-                    onClick={() => runValidation(selectedTask.id, true)}
-                    disabled={loadingTaskId === selectedTask.id}
-                  >
-                    {loadingTaskId === selectedTask.id
-                      ? "Running..."
-                      : "Run Validation"}
-                  </button>
-
-                  {canFixWithAI && (
-                    <button
-                      type="button"
-                      className="btn-primary"
-                      onClick={() => fixWithAI(selectedTask.id)}
-                      disabled={fixingTaskId === selectedTask.id}
-                    >
-                      {fixingTaskId === selectedTask.id
-                        ? "Rewriting..."
-                        : "Fix with AI"}
-                    </button>
-                  )}
-                </div>
-              </div>
-
-              {statusMessage && (
-                <div className={`status-message ${getStatusVariant(statusMessage)}`}>
-                  {getStatusIcon(getStatusVariant(statusMessage), statusMessage)}
-                  <span>{statusMessage}</span>
-                </div>
-              )}
-
-              {displayResult && (
-                <div className="validation-results-grid">
-                  <div
-                    className={`validation-result-card ${
-                      displayResult.passed
-                        ? "validation-result-passed"
-                        : "validation-result-failed"
-                    }`}
-                  >
-                    <div className="validation-result-label">Result</div>
-                    <div className="validation-result-value">
-                      <span className={`validation-result-icon ${displayResult.passed ? "icon-passed" : "icon-failed"}`}>
-                        <VIcon type={displayResult.passed ? "passed" : "failed"} />
-                      </span>
-                      {displayResult.passed ? "Passed" : "Failed"}
-                    </div>
-                    <div className="validation-result-sub">
-                      {displayResult.passed_tests || 0}/
-                      {displayResult.total_tests || 0} tests
-                    </div>
-                  </div>
-
-                  {!displayResult.passed && displayResult.failure_reason && (
-                    <div className="validation-result-card validation-result-failed">
-                      <div className="validation-result-label">Why it failed</div>
-                      <pre className="validation-failure-reason">
-                        {displayResult.failure_reason}
-                      </pre>
-                    </div>
-                  )}
-
-                  {aiFixNotes && (
-                    <div className="validation-result-card">
-                      <div className="validation-result-label">AI rewrite notes</div>
-                      <pre className="validation-failure-reason">{aiFixNotes}</pre>
-                    </div>
-                  )}
-                </div>
-              )}
-
-              {displayResult?.logs && (
-                <div className="logs-card validation-logs-card">
-                  <h3>Full Execution Logs</h3>
-                  <pre>{displayResult.logs}</pre>
-                </div>
-              )}
-            </>
-          )}
-        </div>
+      
       </div>
 
     </div>
