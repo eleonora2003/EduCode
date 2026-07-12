@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect, useCallback } from "react";
+import React, { createContext, useContext, useState, useEffect, useCallback, useMemo } from "react";
 
 // Cookie categories with descriptions
 export const COOKIE_CATEGORIES = {
@@ -164,7 +164,7 @@ export function CookieConsentProvider({ children }) {
     return status;
   }, [consent]);
 
-  const value = {
+  const value = useMemo(() => ({
     consent,
     isBannerVisible,
     isModalOpen,
@@ -178,7 +178,20 @@ export function CookieConsentProvider({ children }) {
     resetConsent,
     getConsentStatus,
     COOKIE_CATEGORIES
-  };
+  }), [
+    consent,
+    isBannerVisible,
+    isModalOpen,
+    isLoading,
+    acceptAll,
+    rejectAll,
+    savePreferences,
+    isAllowed,
+    openPreferencesModal,
+    closePreferencesModal,
+    resetConsent,
+    getConsentStatus
+  ]);
 
   return (
     <CookieConsentContext.Provider value={value}>

@@ -77,9 +77,9 @@ export default function AIWidget({ showAI, setShowAI, onTemplateGenerated }) {
             <div className="ai-msg bot">
               <div className="ai-msg-sender">AI Assistant</div>
               <div className="ai-typing">
-                <span />
-                <span />
-                <span />
+                <span></span>
+                <span></span>
+                <span></span>
               </div>
             </div>
           )}
@@ -101,11 +101,9 @@ export default function AIWidget({ showAI, setShowAI, onTemplateGenerated }) {
       </div>
 
       <button className="ai-fab" onClick={() => setOpen((v) => !v)} aria-label="Open AI assistant">
-        AI
-        <span className="ai-dot" />
+        AI<span className="ai-dot" />
       </button>
     </div>
   );
 }
-
 

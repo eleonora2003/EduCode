@@ -26,12 +26,12 @@
 // Reset.
 // Based on meyerweb.com/eric/tools/css/reset (v2.0 | 20110126 | License: public domain)
 
-	html, body, div, span, applet, object,
+	html, body, div, span, object,
 	iframe, h1, h2, h3, h4, h5, h6, p, blockquote,
-	pre, a, abbr, acronym, address, big, cite,
+	pre, a, abbr, address, cite,
 	code, del, dfn, em, img, ins, kbd, q, s, samp,
-	small, strike, strong, sub, sup, tt, var, b,
-	u, i, center, dl, dt, dd, ol, ul, li, fieldset,
+	small, strong, sub, sup, var, b,
+	u, i, dl, dt, dd, ol, ul, li, fieldset,
 	form, label, legend, table, caption, tbody,
 	tfoot, thead, tr, th, td, article, aside,
 	canvas, details, embed, figure, figcaption,
@@ -40,7 +40,6 @@
 		margin: 0;
 		padding: 0;
 		border: 0;
-		font-size: 100%;
 		font: inherit;
 		vertical-align: baseline;
 	}
@@ -95,10 +94,6 @@
 	}
 
 /* Basic */
-
-	@-ms-viewport {
-		width: device-width;
-	}
 
 	// Set box model to border-box.
 	// Based on css-tricks.com/inheriting-box-sizing-probably-slightly-better-best-practice
@@ -324,9 +319,6 @@
 			top: -0.25em;
 		}
 
-		h2 + p {
-		}
-
 		h3 + p {
 			font-size: 1.1em;
 		}
@@ -440,7 +432,7 @@
 	}
 
 	input[type="checkbox"],
-	input[type="radio"], {
+	input[type="radio"] {
 		@include vendor('appearance', 'none');
 		display: block;
 		float: left;
@@ -571,7 +563,7 @@
 
 		&.brands {
 			&:before {
-				font-family: 'Font Awesome 5 Brands';
+				font-family: 'Font Awesome 5 Brands', sans-serif;
 			}
 		}
 
@@ -1196,7 +1188,7 @@
 			}
 
 			input[type="checkbox"],
-			input[type="radio"], {
+			input[type="radio"] {
 				& + label {
 					color: _palette($p, fg);
 

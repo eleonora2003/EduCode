@@ -131,13 +131,16 @@ export default function Validation({ onNavigate }) {
     setSelectedTaskId(task.id);
     setValidationResult(task.validation_result || null);
     setAiFixNotes("");
-    setStatusMessage(
-      task.validation_result
-        ? task.validation_result.passed
-          ? "Last run passed."
-          : "Last run failed — see details below."
-        : "Select Run Validation to test this task."
-    );
+
+    let message;
+    if (!task.validation_result) {
+      message = "Select Run Validation to test this task.";
+    } else if (task.validation_result.passed) {
+      message = "Last run passed.";
+    } else {
+      message = "Last run failed — see details below.";
+    }
+    setStatusMessage(message);
   };
 
   const getStatusBadge = (status) => {

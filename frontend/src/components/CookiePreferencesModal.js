@@ -73,8 +73,17 @@ function CookiePreferencesModal() {
   if (!isModalOpen) return null;
 
   return (
-    <div className="cookie-modal-overlay" onClick={handleOverlayClick} onKeyDown={handleOverlayClick} role="dialog" aria-labelledby="cookie-modal-title" tabIndex={-1}>
-      <div className="cookie-modal" onClick={(e) => e.stopPropagation()} onKeyDown={(e) => e.stopPropagation()}>
+    <button
+      className="cookie-modal-overlay"
+      onClick={handleOverlayClick}
+      aria-label="Close modal by clicking overlay"
+      type="button"
+    >
+      <dialog
+        open
+        className="cookie-modal"
+        aria-labelledby="cookie-modal-title"
+      >
         <div className="cookie-modal-header">
           <div className="cookie-modal-header-content">
             <div className="cookie-modal-icon">
@@ -172,8 +181,8 @@ function CookiePreferencesModal() {
             Accept All
           </button>
         </div>
-      </div>
-    </div>
+      </dialog>
+    </button>
   );
 }
 
