@@ -104,21 +104,34 @@ class ExportService:
 
     @staticmethod
     def _create_code_box(content: str, border_color: str) -> "Table":
-        """Create a styled code box table for PDF export."""
         from reportlab.lib.units import inch
-        from reportlab.platypus import Table, TableStyle
+        from reportlab.platypus import Table, TableStyle, Paragraph
+        from reportlab.lib.styles import ParagraphStyle
         from reportlab.lib.colors import HexColor
 
+        code_style = ParagraphStyle(
+            "Code",
+            fontName="Courier",
+            fontSize=8,
+            leading=10,
+        )
+
+        code = Paragraph(
+            content.replace("&", "&amp;")
+                   .replace("<", "&lt;")
+                   .replace(">", "&gt;")
+                   .replace("\n", "<br/>"),
+            code_style
+        )
+
         box = Table(
-            [[content]],
+            [[code]],
             colWidths=[5.8 * inch]
         )
 
         box.setStyle(TableStyle([
             ('BACKGROUND', (0, 0), (-1, -1), HexColor('#f8fafc')),
             ('BOX', (0, 0), (-1, -1), 1, HexColor(border_color)),
-            ('FONTNAME', (0, 0), (-1, -1), 'Courier'),
-            ('FONTSIZE', (0, 0), (-1, -1), 8),
             ('PADDING', (0, 0), (-1, -1), 10),
         ]))
 
