@@ -4676,7 +4676,7 @@ pre {
 
 [data-theme="dark"] .tab.active,
 [data-theme="dark"] .link-view {
-  color: var(--accent);
+  color: var(--text-secondary);
 }
 
 [data-theme="dark"] .ai-header {
